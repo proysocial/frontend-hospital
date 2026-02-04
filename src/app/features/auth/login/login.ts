@@ -41,17 +41,17 @@ export class Login {
   // Función para iniciar sesión 
   login(){
     this.auth.login(this.email, this.contrasena)
-      Swal.fire({
+    Swal.fire({
         icon: 'success',
         title: 'Inicio de sesión exitoso',
         text: 'Bienvenido al sistema',
         confirmButtonText: 'Continuar',
         confirmButtonColor: '#2563EB'
-      }).then((result) => {
+    }).then((result) => {
         if(result.isConfirmed) {
           this.router.navigate(['/principal'])
         }
-      })
+    })
   }
 
 

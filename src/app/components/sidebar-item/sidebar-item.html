@@ -1,15 +1,15 @@
-<div
-  class="flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition"
-  [class.bg-[#2166E8]]="active"
-  [class.text-white]="active"
-  [class.text-gray-300]="!active"
-  [class.hover:bg-white/10]="!active"
+<a
+  [routerLink]="link"
+  routerLinkActive="bg-[#2166E8] text-white"
+  [routerLinkActiveOptions]="{ exact: true }"
+  class="flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition
+         text-gray-300 hover:bg-[#1b54bd]"
 >
-  <mat-icon class="align-middle text-xl">
+  <mat-icon class="text-xl leading-none">
     {{ icon }}
   </mat-icon>
 
   <span class="text-sm font-medium leading-none">
     {{ label }}
   </span>
-</div>
+</a>
