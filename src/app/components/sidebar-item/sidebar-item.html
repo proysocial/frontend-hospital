@@ -1,0 +1,15 @@
+<div
+  class="flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition"
+  [class.bg-[#2166E8]]="active"
+  [class.text-white]="active"
+  [class.text-gray-300]="!active"
+  [class.hover:bg-white/10]="!active"
+>
+  <mat-icon class="align-middle text-xl">
+    {{ icon }}
+  </mat-icon>
+
+  <span class="text-sm font-medium leading-none">
+    {{ label }}
+  </span>
+</div>

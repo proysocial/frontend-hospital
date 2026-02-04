@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Device } from '../../../services/device';
 import { Auth } from '../../../services/auth';
 import { MatIconModule } from '@angular/material/icon';
+import { Router } from '@angular/router';
+
 import Swal from 'sweetalert2';
 
 @Component({
@@ -19,6 +21,7 @@ export class Login {
   //Inyección de dependencia de servicios 
   private device = inject(Device) 
   private auth = inject(Auth) 
+  private router = inject(Router)
 
   email = ''
   contrasena = ''
@@ -37,18 +40,18 @@ export class Login {
 
   // Función para iniciar sesión 
   login(){
-
-    console.log(this.email)
-    console.log(this.contrasena)
-
     this.auth.login(this.email, this.contrasena)
-    Swal.fire({
-      icon: 'success',
-      title: 'Inicio de sesión exitoso',
-      text: 'Bienvenido al sistema',
-      confirmButtonText: 'Continuar',
-      confirmButtonColor: '#2563EB'
-    })
+      Swal.fire({
+        icon: 'success',
+        title: 'Inicio de sesión exitoso',
+        text: 'Bienvenido al sistema',
+        confirmButtonText: 'Continuar',
+        confirmButtonColor: '#2563EB'
+      }).then((result) => {
+        if(result.isConfirmed) {
+          this.router.navigate(['/principal'])
+        }
+      })
   }
 
 

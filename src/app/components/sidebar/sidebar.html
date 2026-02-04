@@ -1,0 +1,32 @@
+<aside class="w-64 h-full bg-[#0F172A] text-white flex flex-col justify-between">
+    <!-- Sidebar -->
+    <div>
+        <!-- Cabecera -->
+        <div class="p-6">
+            <h1 class="text-4xl font-bold">Dashboard</h1>
+            <p class="text-md text-gray-400">Hosp. Ramiro Prialé</p>
+        </div>
+
+        <!-- Menu -->
+         <nav class="space-y-1 px-3">
+            <h1 class="text-2xl text-gray-400 px-3 mb-2 font-bold">GENERAL</h1>
+
+            <app-sidebar-item
+                icon="analytics"
+                label="Reportes"
+                [active]=true
+            />
+
+            <h1 class="text-2xl text-gray-400 px-3 mb-2 font-bold">OPERATIVO</h1>
+
+            <app-sidebar-item
+                icon="article"
+                label="Herramientas"
+            />
+
+         </nav>
+    </div>
+
+    <app-user-profile></app-user-profile>
+
+</aside>
