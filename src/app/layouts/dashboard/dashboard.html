@@ -1,12 +1,16 @@
 <div class="flex h-screen bg-gray-100">
-  
-  <!-- Sidebar -->
-  <app-sidebar></app-sidebar>
+  @if (isHandset$ | async) {
+    <h1>Aún no se creo este módulo para celulares :c recomendamos usarlo para web</h1>
+  }
 
-  <!-- Contenido -->
-  <main class="flex-1 p-6 overflow-auto">
-    <router-outlet></router-outlet>
-  </main>
+  @if (isDesktop$ | async) {
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
 
+    <!-- Contenido -->
+    <main class="flex-1 p-6 overflow-auto">
+      <router-outlet></router-outlet>
+    </main>
+  }
 </div>
 
