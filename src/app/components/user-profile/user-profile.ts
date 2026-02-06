@@ -13,6 +13,9 @@ export class UserProfile {
   nombre:String = "Jorge Lopez"
   cargo:Cargo = Cargo.Administrador
 
+  //Modal
+  isOpen: Boolean = false
+
   //Getter
   get iniciales(): String {
     const partesNombre = this.nombre.split(" "); 
@@ -21,6 +24,16 @@ export class UserProfile {
     const segunda = partesNombre.length > 1 ? partesNombre[1].charAt(0) : "";
 
     return (primera + segunda).toUpperCase();
+  }
+
+  //Funciones para el modal 
+  abrirModal(event: MouseEvent) {
+    event.stopPropagation()
+    this.isOpen = true
+  }
+
+  cerrarModal() {
+    this.isOpen = false
   }
 
 }
