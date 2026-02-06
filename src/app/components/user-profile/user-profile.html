@@ -1,15 +1,40 @@
-<div class="p-4 border-t border-white/10 flex items-center gap-3">
-  
+<!-- Card perfil -->
+<div class="p-4 border-t border-white/10 flex items-center gap-3 cursor-pointer"
+     (click)="abrirModal($event)">
+
   <!-- Avatar -->
-  <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold">
-    {{iniciales}}
+  <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white">
+    {{ iniciales }}
   </div>
 
   <!-- Info -->
   <div>
-    <p class="text-sm font-semibold">{{nombre}}</p>
-    <p class="text-xs text-gray-400">{{cargo}}</p>
+    <p class="text-sm font-semibold">{{ nombre }}</p>
+    <p class="text-xs text-gray-400">{{ cargo }}</p>
   </div>
-
 </div>
+
+
+<!-- Modal -->
+@if (isOpen) {
+  <div
+    class="fixed inset-0 flex items-center justify-center z-50"
+    >
+
+    <div
+      class="bg-white rounded-lg shadow-lg w-96 p-6 relative"
+      (click)="$event.stopPropagation()">
+
+      <h2 class="text-xl font-bold mb-4 text-black">Perfil de Usuario</h2>
+      <p class="text-black">Contenido del modal aquí</p>
+
+      <button
+        class="mt-4 bg-red-500 text-white px-3 py-1 rounded"
+        (click)="cerrarModal()">
+        Cerrar
+      </button>
+
+    </div>
+  </div>
+}
 
