@@ -5,7 +5,6 @@ import { Device } from '../../../services/device';
 import { Auth } from '../../../services/auth';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
-
 import Swal from 'sweetalert2';
 
 @Component({
@@ -39,19 +38,28 @@ export class Login {
 
 
   // Función para iniciar sesión 
-  login(){
-    this.auth.login(this.email, this.contrasena)
-    Swal.fire({
-        icon: 'success',
-        title: 'Inicio de sesión exitoso',
-        text: 'Bienvenido al sistema',
-        confirmButtonText: 'Continuar',
-        confirmButtonColor: '#2563EB'
-    }).then((result) => {
-        if(result.isConfirmed) {
-          this.router.navigate(['/principal'])
-        }
-    })
+  login() {
+    if (!this.email || !this.contrasena) {
+      Swal.fire('Error', 'Ingrese correo y contraseña', 'warning');
+      return;
+    }
+
+    this.auth.login(this.email, this.contrasena).subscribe({
+      next: () => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Inicio de sesión exitoso',
+          text: `Bienvenido ${this.auth.getUsuario()?.nombre}`,
+          confirmButtonText: 'Continuar',
+          confirmButtonColor: '#2563EB'
+        }).then((result) => {
+          if(result.isConfirmed) this.router.navigate(['/principal']);
+        });
+      },
+      error: (err) => {
+        Swal.fire('Error', err.error?.mensaje || 'Correo o contraseña incorrectos', 'error');
+      }
+    });
   }
 
 
