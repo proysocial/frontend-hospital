@@ -31,6 +31,11 @@ export class ForgotPassword {
     }
 
     // SOLO FRONTEND POR AHORA
+    // Api a consumir: 
+    //  private API = environment.API_URL --- usar esta variable, import el environment correctamente 
+    // RUtas: 
+    // http://127.0.0.1:8000/api/v1/recuperar/enviar-codigo/ ----> Envia código al correo que se inserta de 6 digitos
+    // http://127.0.0.1:8000/api/v1/recuperar/cambiar-contrasena/ ---> Modifica la contraseña
     Swal.fire({
       icon: 'success',
       title: 'Solicitud enviada',
