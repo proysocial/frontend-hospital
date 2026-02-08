@@ -62,7 +62,7 @@ export class Login {
     });
   }
     irAForgotPassword() {
-      this.router.navigate(['/forgot-password']);
+      this.router.navigate(['/recover']);
     }
 
 

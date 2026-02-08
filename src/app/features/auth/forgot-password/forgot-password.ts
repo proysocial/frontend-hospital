@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Device } from '../../../services/device';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { RecoverFlowService } from '../services/recover-flow.service'; //ELIMINAR SOLO PARA VER FLUJO
 import Swal from 'sweetalert2';
 
 @Component({
@@ -16,7 +17,7 @@ export class ForgotPassword {
 
   private device = inject(Device);
   private router = inject(Router);
-
+  private recoverFlow = inject(RecoverFlowService);//ELIMINAR SOLO PARA VER FLUJO
   email = '';
 
   isHandset$ = this.device.isHandset$;
@@ -36,7 +37,8 @@ export class ForgotPassword {
       text: 'Si el correo existe, recibirás instrucciones para recuperar tu contraseña',
       confirmButtonColor: '#2563EB'
     }).then(() => {
-      this.router.navigate(['/verification-code']);
+      this.recoverFlow.setEmailVerified();//ELIMINAR SOLO PARA VER FLUJO
+      this.router.navigate(['/recover/code']);
     });
   }
 
@@ -44,7 +46,4 @@ export class ForgotPassword {
     this.router.navigate(['/login']);
   }
 
-  irVerificationCode() {
-      this.router.navigate(['/verification-code']);
-    }
 }

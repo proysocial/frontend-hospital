@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Device } from '../../../services/device';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
+import { RecoverFlowService } from '../services/recover-flow.service';//ELIMINAR SOLO PARA VER FLUJO
 import Swal from 'sweetalert2';
 
 @Component({
@@ -16,11 +17,13 @@ export class ResetPassword {
 
   private device = inject(Device);
   private router = inject(Router);
+  private recoverFlow = inject(RecoverFlowService); //ELIMINAR SOLO PARA VER FLUJO
 
   password = '';
   repeatPassword = '';
-
   mostrarContrasena = false;
+
+  passwordStrength: 'Débil' | 'Media' | 'Fuerte' = 'Débil';
 
   isHandset$ = this.device.isHandset$;
   isDesktop$ = this.device.isDesktop$;
@@ -40,30 +43,29 @@ export class ResetPassword {
       return;
     }
 
-    // Vuelve al inicio pq necesita registrarse con nueva contraseña 
     Swal.fire('Éxito', 'Contraseña actualizada correctamente', 'success')
-      .then(() => this.router.navigate(['/login']));
+      .then(() => {
+        this.recoverFlow.reset(); //ELIMINAR SOLO PARA VER FLUJO
+        this.router.navigate(['/login']);
+      });
   }
 
   cancel() {
+    this.recoverFlow.reset();//ELIMINAR SOLO PARA VER FLUJO
     this.router.navigate(['/login']);
   }
 
-  //para la contraseña
-  passwordStrength: 'Débil' | 'Media' | 'Fuerte' = 'Débil';
-
-    checkPasswordStrength() {
+  checkPasswordStrength() {
     const pwd = this.password;
-
     let score = 0;
+
     if (pwd.length >= 8) score++;
     if (/[A-Z]/.test(pwd)) score++;
     if (/[0-9]/.test(pwd)) score++;
     if (/[^A-Za-z0-9]/.test(pwd)) score++;
 
     if (score <= 1) this.passwordStrength = 'Débil';
-    else if (score === 2 || score === 3) this.passwordStrength = 'Media';
+    else if (score <= 3) this.passwordStrength = 'Media';
     else this.passwordStrength = 'Fuerte';
-    }
-
+  }
 }
