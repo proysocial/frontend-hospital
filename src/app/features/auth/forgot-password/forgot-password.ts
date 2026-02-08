@@ -1,0 +1,50 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Device } from '../../../services/device';
+import { MatIconModule } from '@angular/material/icon';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
+
+@Component({
+  selector: 'app-forgot-password',
+  imports: [CommonModule, FormsModule, MatIconModule],
+  templateUrl: './forgot-password.html',
+  styleUrls: ['../login/login.css']
+})
+export class ForgotPassword {
+
+  private device = inject(Device);
+  private router = inject(Router);
+
+  email = '';
+
+  isHandset$ = this.device.isHandset$;
+  isTablet$ = this.device.isTablet$;
+  isDesktop$ = this.device.isDesktop$;
+
+  recuperar() {
+    if (!this.email) {
+      Swal.fire('Error', 'Ingrese su correo electrónico', 'warning');
+      return;
+    }
+
+    // SOLO FRONTEND POR AHORA
+    Swal.fire({
+      icon: 'success',
+      title: 'Solicitud enviada',
+      text: 'Si el correo existe, recibirás instrucciones para recuperar tu contraseña',
+      confirmButtonColor: '#2563EB'
+    }).then(() => {
+      this.router.navigate(['/verification-code']);
+    });
+  }
+
+  volverLogin() {
+    this.router.navigate(['/login']);
+  }
+
+  irVerificationCode() {
+      this.router.navigate(['/verification-code']);
+    }
+}
