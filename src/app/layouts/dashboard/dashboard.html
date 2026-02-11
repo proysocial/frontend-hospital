@@ -1,16 +1,51 @@
-<div class="flex h-screen bg-gray-100">
+<div class="h-screen bg-gray-100 flex flex-col overflow-hidden">
   @if (isHandset$ | async) {
-    <h1>Aún no se creo este módulo para celulares :c recomendamos usarlo para web</h1>
+    
+    <!-- Header -->
+    <header class="h-16 bg-white text-[#0F172A] flex items-center px-4 justify-between shadow-sm shrink-0 z-30 border-b border-gray-200">
+      <div class="flex items-center gap-3">
+        <!-- Botón Menú -->
+        <button (click)="toggleMenu()" class="p-2 flex rounded-md bg-[#0F172A] transition text-white">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <!-- Titulo de la vista -->
+        <div>
+           <h1 class="text-lg font-bold leading-none">{{ layoutService.titulo() }}</h1>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenido -->
+    <main class="flex-1 overflow-auto p-4 relative z-0">
+      <router-outlet></router-outlet>
+    </main>
+
+    <!-- Sidebar para deslizar con fondo oscuro -->
+    @if (menuAbierto()) {
+      <div 
+        class="fixed inset-0 bg-black/50 z-40 animate-in fade-in duration-200"
+        (click)="cerrarMenu()"
+      ></div>
+    }
+
+    <!-- Contenedor del Sidebar -->
+    <div 
+      class="fixed inset-y-0 left-0 z-50 w-64 shadow-2xl transition-transform duration-300 ease-in-out transform"
+      [class.translate-x-0]="menuAbierto()"
+      [class.-translate-x-full]="!menuAbierto()"
+    >
+        <app-sidebar class="h-full"></app-sidebar>
+    </div>
   }
 
   @if (isDesktop$ | async) {
-    <!-- Sidebar -->
-    <app-sidebar></app-sidebar>
-
-    <!-- Contenido -->
-    <main class="flex-1 p-6 overflow-auto">
-      <router-outlet></router-outlet>
-    </main>
+    <div class="flex h-full w-full overflow-hidden">
+        <!-- Sidebar -->
+        <app-sidebar></app-sidebar>
+        <!-- Contenido -->
+        <main class="flex-1 p-6 overflow-auto">
+          <router-outlet></router-outlet>
+        </main>     
+    </div>
   }
 </div>
-
