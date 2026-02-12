@@ -1,16 +1,31 @@
-<div class="h-full bg-gray-100 p-1 flex flex-col overflow-hidden">
+<div class="min-h-screen flex flex-col bg-gray-100 h-full gap-5">
 
+  <!-- MOBILE -->
   @if (isHandset$ | async) {
-    <div class="flex items-center justify-center h-full">
-      <p>Aún no se elabora una parte para móvil</p>
+    <div class="flex flex-col h-full">
+      <!-- HEADER BOTÓN -->
+      <div class="px-4 pt-2 pb-2 shrink-0">
+         <button
+            (click)="crearReporte()"
+            class="w-full flex items-center justify-center gap-2 bg-green-500 active:bg-green-600 text-white py-3 rounded-xl shadow-md transition-all active:scale-[0.98]"
+          >
+            <mat-icon class="scale-110">add_circle</mat-icon>
+            <span class="text-base font-bold">Crear Nuevo Reporte</span>
+         </button>
+      </div>
+    </div>
+    <!-- CONTENIDO TABLA -->
+    <div class="flex-1 overflow-hidden">
+      <app-reportes-lista class="h-full block"></app-reportes-lista>
     </div>
   }
 
+  <!-- DESKTOP -->
   @if (isDesktop$ | async) {
-
-    <!-- HEADER -->
+    <!-- HEADER BOTÓN -->
     <div class="flex items-center justify-between mb-4 shrink-0">
         <button
+        (click)="crearReporte()"
         class="flex items-center gap-2 bg-green-500 hover:bg-green-600
                 text-white px-4 py-2 rounded-lg shadow transition"
         >
@@ -19,11 +34,8 @@
         </button>
     </div>
 
-    <!-- CONTENIDO -->
-    <div class="flex-1 bg-blue-700 rounded-lg shadow overflow-hidden">
-        <!-- aquí va la tabla -->
-    </div>
-
+    <!-- CONTENIDO TABLA -->
+    <app-reportes-lista class="h-full block"></app-reportes-lista>
     }
 
 </div>
