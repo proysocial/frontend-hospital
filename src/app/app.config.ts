@@ -6,6 +6,7 @@ import { provideEchartsCore } from 'ngx-echarts';
 import { provideSweetAlert2 } from "@sweetalert2/ngx-sweetalert2";
 import { tokenInterceptor } from './interceptor/Token-interceptor';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
+import { httpInterceptor } from './interceptor/http-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,7 +16,8 @@ export const appConfig: ApplicationConfig = {
 
     provideHttpClient(
       withFetch(),
-      withInterceptors([tokenInterceptor])
+      withInterceptors([tokenInterceptor]),
+      withInterceptors([httpInterceptor])
     ),
 
     provideClientHydration(withEventReplay()),

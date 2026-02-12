@@ -6,7 +6,8 @@ import { inject } from '@angular/core';
 
 @Component({
   selector: 'app-loader',
-  imports: [],
+  standalone:true,
+  imports: [CommonModule],
   templateUrl: './loader.html',
   styles: `
     :host {
