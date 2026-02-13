@@ -1,11 +1,12 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Device } from '../../../services/device';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { FormsModule } from '@angular/forms';
-import { RecoverFlowService } from '../services/recover-flow.service'; //ELIMINAR SOLO PARA VER FLUJO
+import { RecoverFlowService } from '../services/recover-flow.service';
+import { timer, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-verification-code',
@@ -16,52 +17,58 @@ import { RecoverFlowService } from '../services/recover-flow.service'; //ELIMINA
 })
 export class VerificationCode implements OnDestroy {
 
+  private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private device = inject(Device);
-  private recoverFlow = inject(RecoverFlowService); //ELIMINAR SOLO PARA VER FLUJO
+  private recoverFlow = inject(RecoverFlowService);
 
   // Responsive
   isHandset$ = this.device.isHandset$;
   isDesktop$ = this.device.isDesktop$;
 
-  // Código ingresado
   code: string = '';
 
-  // ⏱️ contador
   seconds = 60;
   timerFinished = false;
-  private interval: any;
+
+  private countdownSub?: Subscription;
+  private endTime!: number;
 
   constructor() {
     this.startTimer();
   }
 
-  startTimer() {
-    this.seconds = 60;
+  startTimer(): void {
     this.timerFinished = false;
+    this.endTime = Date.now() + 60_000;
 
-    this.interval = setInterval(() => {
-      this.seconds--;
+    this.countdownSub?.unsubscribe();
 
-      if (this.seconds <= 0) {
+    this.countdownSub = timer(0, 1000).subscribe(() => {
+      const remaining = Math.ceil((this.endTime - Date.now()) / 1000);
+      this.seconds = Math.max(remaining, 0);
+
+      if (this.seconds === 0) {
         this.timerFinished = true;
-        clearInterval(this.interval);
+        this.countdownSub?.unsubscribe();
       }
-    }, 1000);
+
+      this.cdr.detectChanges();
+    });
   }
 
-  resendCode() {
+  resendCode(): void {
     this.startTimer();
     Swal.fire('Enviado', 'Se reenviará el código a tu correo', 'success');
   }
 
-  verifyCode() {
+  verifyCode(): void {
     if (this.code.length !== 6) {
       Swal.fire('Error', 'Ingrese el código completo de 6 caracteres', 'warning');
       return;
     }
 
-    this.recoverFlow.setCodeVerified(); //ELIMINAR SOLO PARA VER FLUJO
+    this.recoverFlow.setCodeVerified();
 
     Swal.fire({
       icon: 'success',
@@ -69,17 +76,15 @@ export class VerificationCode implements OnDestroy {
       confirmButtonText: 'Continuar',
       confirmButtonColor: '#2563EB'
     }).then(() => {
-      this.router.navigate(['/recover/reset']); 
+      this.router.navigate(['/recover/reset']);
     });
   }
 
-  volverLogin() {
+  volverLogin(): void {
     this.router.navigate(['/login']);
   }
 
-  ngOnDestroy() {
-    if (this.interval) {
-      clearInterval(this.interval);
-    }
+  ngOnDestroy(): void {
+    this.countdownSub?.unsubscribe();
   }
 }
