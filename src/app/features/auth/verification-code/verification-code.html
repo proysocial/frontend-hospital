@@ -1,0 +1,181 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100">
+
+  <!-- MOBILE -->
+  @if (isHandset$ | async) {
+    <div class="w-full max-w-sm bg-white rounded-3xl shadow-lg overflow-hidden">
+
+      <!-- Header -->
+      <div class="bg-[linear-gradient(-109deg,#122245_50%,#0F2732_100%)] p-6 text-center">
+        <div class="mx-auto w-24 h-24 bg-white/10 rounded-2xl flex items-center justify-center mb-4">
+          <img src="assets/essalud-logo2.png" class="w-16 object-contain" />
+        </div>
+        <h1 class="text-white text-xl font-bold">Panel Hospitalario</h1>
+        <p class="text-gray-300 text-sm">HOSP. RAMIRO PRIALÉ</p>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 text-center">
+
+        <h2 class="text-xl font-semibold text-[#202E46] mb-2">
+          Código de seguridad
+        </h2>
+
+        <!-- TEXTO INICIAL -->
+        @if (!timerFinished) {
+          <p class="text-gray-500 text-sm mb-2">
+            Comprueba si recibiste un correo electrónico con tu código de 6 dígitos
+          </p>
+
+          <p class="text-gray-500 text-sm mb-4 text-left">
+            Reenviar correo en {{ seconds }} segundos
+          </p>
+        }
+
+        <!-- TEXTO CUANDO TERMINA -->
+        @if (timerFinished) {
+          <p class="text-gray-500 text-sm mb-2">
+            Comprueba si recibiste un correo electrónico con tu código de 6 dígitos
+          </p>
+          <p class="text-gray-500 text-sm mb-2 text-left">
+            Introduce código
+          </p>
+        }
+
+        <!-- Input -->
+        <input
+          type="text"
+          maxlength="6"
+          [(ngModel)]="code"
+          placeholder="Introduce código"
+          class="w-full h-12 px-4 border border-gray-300 rounded-xl bg-gray-100
+                 focus:outline-none focus:ring-2 focus:ring-[#2F64D6] mb-4"
+        />
+
+        <!-- ¿NO RECIBISTE? -->
+        @if (timerFinished) {
+          <p class="text-sm text-gray-500 mb-4 text-left">
+            ¿No recibiste el código?
+            <span
+              class="text-blue-600 cursor-pointer font-medium hover:underline"
+              (click)="resendCode()"
+            >
+              Click
+            </span>
+          </p>
+        }
+
+        <!-- Botón -->
+        <button
+          type="button"
+          (click)="verifyCode()"
+          class="w-full bg-[#2F64D6] hover:bg-[#1f4fb8] text-white py-3 rounded-xl font-semibold transition"
+        >
+          Verificar código
+        </button>
+
+        <!-- Volver -->
+        <button
+          type="button"
+          (click)="volverLogin()"
+          class="mt-4 text-sm text-blue-600 hover:underline"
+        >
+          Volver al inicio de sesión
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="bg-gray-200 text-center text-xs py-2 text-gray-600">
+        Acceso restringido únicamente para personal autorizado <br>
+        © 2026 Sistema de Gestión Hospitalaria
+      </div>
+    </div>
+  }
+
+  <!-- DESKTOP -->
+  @if (isDesktop$ | async) {
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden">
+
+      <!-- Header -->
+      <div class="bg-[linear-gradient(-109deg,#122245_50%,#0F2732_100%)] px-10 py-10 text-center text-white">
+        <img src="assets/essalud-logo2.png" class="w-20 mx-auto mb-2" />
+        <h1 class="text-3xl font-bold">Panel Hospitalario</h1>
+        <p class="text-gray-300">HOSP. RAMIRO PRIALÉ</p>
+      </div>
+
+      <!-- Body -->
+      <div class="p-8 text-center">
+        <h2 class="text-2xl font-semibold text-[#202E46] mb-2">
+          Código de seguridad
+        </h2>
+
+        <!-- TEXTO INICIAL -->
+        @if (!timerFinished) {
+          <p class="text-[#3B484F] mb-2">
+            Comprueba si recibiste un correo electrónico con tu código de 6 dígitos
+          </p>
+
+          <p class="text-[#3B484F] mb-2 text-left">
+            Reenviar correo en {{ seconds }} segundos
+          </p>
+        }
+
+        <!-- TEXTO CUANDO TERMINA -->
+        @if (timerFinished) {
+          <p class="text-[#3B484F] mb-2 text-left">
+            Introduce código
+          </p>
+        }
+
+        <!-- INPUT -->
+        <input
+          type="text"
+          maxlength="6"
+          [(ngModel)]="code"
+          class="w-full h-12 text-center text-lg border rounded-lg mb-3
+                 focus:outline-none focus:ring-1"
+          placeholder="Introduce código"
+        />
+
+        <!-- ¿NO RECIBISTE? -->
+        @if (timerFinished) {
+          <p class="text-sm text-gray-500 mb-6 text-left">
+            ¿No recibiste el código?
+            <span
+              class="text-[#2F64D6] font-semibold cursor-pointer hover:underline"
+              (click)="resendCode()"
+            >
+              Click
+            </span>
+          </p>
+        }
+
+        <!-- BOTÓN -->
+        <button
+          type="button"
+          (click)="verifyCode()"
+          class="w-full bg-[#2F64D6] hover:bg-[#1f4fb8] text-white py-2 rounded-lg font-semibold transition"
+        >
+          Verificar código
+        </button>
+
+        <!-- VOLVER -->
+        <div class="mt-4">
+          <button
+            type="button"
+            (click)="volverLogin()"
+            class="text-sm text-[#2F64D6] hover:underline"
+          >
+            Volver al inicio de sesión
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="bg-gray-200 text-center text-xs py-2 text-gray-600">
+        <p>Acceso restringido únicamente para personal autorizado</p>
+        <p>© 2026 Sistema de Gestión Hospitalaria</p>
+      </div>
+    </div>
+  }
+
+</div>
