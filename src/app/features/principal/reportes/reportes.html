@@ -1,1 +1,15 @@
-<p>reportes works!</p>,
+<!-- MOBILE -->
+@if (isHandset$ | async) {
+<div class="pt-4">
+    <!-- Importando componente -->
+    <app-reportes-lista class="h-full block"></app-reportes-lista>
+</div>
+}
+
+<!-- DESKTOP -->
+@if (isDesktop$ | async) {
+<div class="">
+    <!-- Importando componente -->
+    <app-reportes-lista class="h-full block"></app-reportes-lista>
+</div>
+}

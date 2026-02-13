@@ -49,7 +49,7 @@ export class Auth {
     localStorage.removeItem('usuario');
     this.usuario = null;
     this._isLoggedIn.set(false);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
   getAccessToken() {
