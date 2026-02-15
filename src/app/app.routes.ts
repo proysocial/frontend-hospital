@@ -14,7 +14,7 @@ import { recoverGuard } from './features/auth/services/recover.guard';
 import { Dashboard } from './layouts/dashboard/dashboard';
 import { Reportes } from './features/principal/reportes/reportes';
 import { Herramientas } from './layouts/herramientas/herramientas';
-
+import { Reporte } from './layouts/reporte/reporte';
 // Errors
 import { NotFound } from './features/errors/not-found';
 
@@ -49,7 +49,8 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'reportes', pathMatch: 'full' },
       { path: 'reportes', component: Reportes },
-      { path: 'herramientas', component: Herramientas }
+      { path: 'herramientas', component: Herramientas },
+      { path: 'crearReporte', component: Reporte}
     ]
   },
 
