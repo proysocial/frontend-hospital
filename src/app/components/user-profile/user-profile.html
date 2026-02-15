@@ -1,56 +1,123 @@
-<!-- Card perfil -->
-@if (usuario; as u) {
-  <div
-    class="p-4 border-t border-white/10 flex items-center gap-3 cursor-pointer"
-    (click)="abrirModal($event)"
-  >
 
-    <!-- Avatar -->
+<div class="user-profile-container">
+  
+  @if (usuario) {
     <div
-      class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white">
-      {{ iniciales }}
-    </div>
-
-    <!-- Info -->
-    <div>
-      <p class="text-sm font-semibold">
-        {{ u.nombre }} {{ u.apellido }}
-      </p>
-      <p class="text-xs text-gray-400">
-        Administrador
-      </p>
-    </div>
-
-  </div>
-}
-
-<!-- Modal -->
-@if (isOpen && usuario) {
-  <div class="fixed inset-0 flex items-center justify-center z-50">
-
-    <div
-      class="bg-white rounded-lg shadow-lg w-96 p-6 relative"
-      (click)="$event.stopPropagation()"
+      class="profile-sidebar-item"
+      (click)="abrirModal($event)"
     >
-      <h2 class="text-xl font-bold mb-4 text-black">
-        Perfil de Usuario
-      </h2>
+      <div class="profile-avatar">
+        {{ iniciales }}
+      </div>
 
-      <p class="text-black">
-        Nombre: {{ usuario.nombre }} {{ usuario.apellido }}
-      </p>
-
-      <p class="text-black">
-        Cargo: ADministrador
-      </p>
-
-      <button
-        class="mt-4 bg-red-500 text-white px-3 py-1 rounded"
-        (click)="cerrarModal()"
-      >
-        Cerrar
-      </button>
+      <div class="profile-info">
+        <p class="profile-name">
+          {{ nombreCompleto }}
+        </p>
+        <p class="profile-role">
+          {{ usuario.rol || 'Administrador' }}
+        </p>
+      </div>
     </div>
+  }
 
-  </div>
-}
+  <!-- EDICION DE PERFIL -->
+  @if (isOpen && usuario) {
+    <div class="modal-overlay" (click)="cancelarEdicion()">
+      
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        
+        <!-- Encabezado -->
+        <div class="modal-header">
+          <h2 class="modal-title">Editar Perfil</h2>
+          <button class="modal-close" (click)="cancelarEdicion()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+
+        <!-- Subtítulo -->
+        <p class="modal-subtitle">
+          Para actualizar guarde los cambios realizados.
+        </p>
+
+        <!-- Formulario -->
+        <div class="form-container">
+
+          <!-- ESTADO DE LECTURA -->
+          <div class="form-group">
+            <label class="form-label">Nombre</label>
+            <input
+              type="text"
+              class="form-input readonly"
+              [value]="usuario.nombre"
+              readonly
+            >
+          </div>
+
+          <!-- LECTURA -->
+          <div class="form-group">
+            <label class="form-label">Apellido Materno</label>
+            <input
+              type="text"
+              class="form-input readonly"
+              [value]="usuario.apellido_materno"
+              readonly
+            >
+          </div>
+
+          <!--LECTURA-->
+          <div class="form-group">
+            <label class="form-label">Apellido Paterno</label>
+            <input
+              type="text"
+              class="form-input readonly"
+              [value]="usuario.apellido_paterno"
+              readonly
+            >
+          </div>
+
+          <!-- Correo -->
+          <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input
+              type="email"
+              class="form-input"
+              [(ngModel)]="usuario.correo"
+              placeholder="correo@ejemplo.com"
+            >
+          </div>
+
+          <!-- Contraseña -->
+          <div class="form-group">
+            <label class="form-label">Actualizar contraseña</label>
+            <input
+              type="password"
+              class="form-input"
+              [(ngModel)]="nuevaPassword"
+              placeholder="Nueva contraseña"
+            >
+          </div>
+
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="modal-actions">
+          <button 
+            class="btn btn-secondary" 
+            (click)="cancelarEdicion()"
+          >
+            Cancelar
+          </button>
+
+          <button 
+            class="btn btn-primary" 
+            (click)="guardarCambios()"
+          >
+            Guardar cambios
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>
