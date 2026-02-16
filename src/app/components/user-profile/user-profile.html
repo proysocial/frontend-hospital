@@ -1,25 +1,38 @@
 <!-- Card perfil -->
 @if (usuario; as u) {
   <div
-    class="p-4 border-t border-white/10 flex items-center gap-3 cursor-pointer"
+    class="p-4 border-t border-white/10 cursor-pointer"
     (click)="abrirModal($event)"
   >
 
-    <!-- Avatar -->
-    <div
-      class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white">
-      {{ iniciales }}
+    <!-- Contenedor superior -->
+    <div class="flex items-center gap-3">
+
+      <!-- Avatar -->
+      <div
+        class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white">
+        {{ iniciales }}
+      </div>
+
+      <!-- Info -->
+      <div>
+        <p class="text-sm font-semibold">
+          {{ u.nombre }} {{ u.apellido }}
+        </p>
+        <p class="text-xs text-gray-400">
+          Administrador
+        </p>
+      </div>
+
     </div>
 
-    <!-- Info -->
-    <div>
-      <p class="text-sm font-semibold">
-        {{ u.nombre }} {{ u.apellido }}
-      </p>
-      <p class="text-xs text-gray-400">
-        Administrador
-      </p>
-    </div>
+    <!-- Botón cerrar sesión -->
+    <button
+      class="mt-3 w-full text-sm bg-red-600 hover:bg-red-700 transition text-white py-2 rounded-lg"
+      (click)="logout($event)"
+    >
+      Cerrar sesión
+    </button>
 
   </div>
 }
@@ -41,7 +54,7 @@
       </p>
 
       <p class="text-black">
-        Cargo: ADministrador
+        Cargo: Administrador
       </p>
 
       <button
