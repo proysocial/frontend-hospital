@@ -14,7 +14,6 @@ import { recoverGuard } from './features/auth/services/recover.guard';
 import { Dashboard } from './layouts/dashboard/dashboard';
 import { Reportes } from './features/principal/reportes/reportes';
 import { Herramientas } from './layouts/herramientas/herramientas';
-import { Reporte } from './layouts/reporte/reporte';
 // Errors
 import { NotFound } from './features/errors/not-found';
 
