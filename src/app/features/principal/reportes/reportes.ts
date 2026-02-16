@@ -13,33 +13,32 @@ type EstadoReporte = 'idle' | 'loading' | 'preview';
   styleUrl: './reportes.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Reportes { 
+export class Reportes {
+
   private router = inject(Router);
-  
+
   estado: EstadoReporte = 'idle';
   archivo: File | null = null;
 
   volver() {
-    this.router.navigate(['/principal/herramientas']); 
+    this.router.navigate(['/principal/herramientas']);
   }
 
-  seleccionarArchivo(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
+  seleccionarArchivo(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
 
-    this.archivo = file;
+    this.archivo = input.files[0];
     this.estado = 'loading';
 
-    // Simulación carga preview
     setTimeout(() => {
       this.estado = 'preview';
-    }, 2000);
+    }, 1500);
   }
 
   generarReporte() {
     if (this.estado !== 'preview') return;
     console.log('Reporte generado');
-    // AQUI LA LOGICA DE LOS REPORTES
   }
 
   cancelar() {

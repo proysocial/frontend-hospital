@@ -24,7 +24,10 @@
 
 <!-- Modal -->
 @if (isOpen && usuario) {
-  <div class="fixed inset-0 flex items-center justify-center z-50">
+  <div 
+    class="fixed inset-0 flex items-center justify-center z-50 bg-black/40"
+    (click)="cerrarModal()"
+  >
     <div
       class="bg-white rounded-lg shadow-lg w-96 p-6 relative"
       (click)="$event.stopPropagation()"
@@ -52,13 +55,13 @@
 
         <div class="mt-4 flex gap-2">
           <button
-            class="bg-blue-500 text-white px-3 py-1 rounded"
+            class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
             (click)="editarPerfil()"
           >
             Editar
           </button>
           <button
-            class="bg-red-500 text-white px-3 py-1 rounded"
+            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
             (click)="cerrarModal()"
           >
             Cerrar
@@ -76,7 +79,7 @@
             <input
               type="text"
               [(ngModel)]="nombreEditado"
-              class="w-full border rounded p-2 text-black"
+              class="w-full border rounded p-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
           </div>
 
@@ -85,7 +88,7 @@
             <input
               type="text"
               [(ngModel)]="apellidoPaterno"
-              class="w-full border rounded p-2 text-black"
+              class="w-full border rounded p-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
           </div>
 
@@ -94,20 +97,20 @@
             <input
               type="text"
               [(ngModel)]="apellidoMaterno"
-              class="w-full border rounded p-2 text-black"
+              class="w-full border rounded p-2 text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
           </div>
         </div>
 
         <div class="mt-4 flex gap-2">
           <button
-            class="bg-green-500 text-white px-3 py-1 rounded"
+            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
             (click)="guardarCambios()"
           >
             Guardar
           </button>
           <button
-            class="bg-gray-500 text-white px-3 py-1 rounded"
+            class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded"
             (click)="cancelarEdicion()"
           >
             Cancelar

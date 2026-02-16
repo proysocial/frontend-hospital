@@ -49,7 +49,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'reportes', pathMatch: 'full' },
       { path: 'reportes', component: Reportes },
       { path: 'herramientas', component: Herramientas },
-      { path: 'crearReporte', component: Reporte}
+      { path: 'crearReporte', component: Reportes}
     ]
   },
 
