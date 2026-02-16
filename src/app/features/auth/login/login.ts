@@ -61,6 +61,9 @@ export class Login {
       }
     });
   }
+    irAForgotPassword() {
+      this.router.navigate(['/recover']);
+    }
 
 
 }
