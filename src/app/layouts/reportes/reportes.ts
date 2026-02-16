@@ -6,21 +6,21 @@ import { Router } from '@angular/router';
 type EstadoReporte = 'idle' | 'loading' | 'preview';
 
 @Component({
-  selector: 'app-reporte',
+  selector: 'app-reportes',
   standalone: true,
   imports: [CommonModule, MatIconModule],
-  templateUrl: './reporte.html',
-  styleUrl: './reporte.css',
+  templateUrl: './reportes.html',
+  styleUrl: './reportes.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Reporte {
+export class Reportes { 
   private router = inject(Router);
   
   estado: EstadoReporte = 'idle';
   archivo: File | null = null;
 
   volver() {
-    this.router.navigate(['/herramientas']);
+    this.router.navigate(['/principal/herramientas']); 
   }
 
   seleccionarArchivo(event: any) {
@@ -38,8 +38,8 @@ export class Reporte {
 
   generarReporte() {
     if (this.estado !== 'preview') return;
-
     console.log('Reporte generado');
+    // AQUI LA LOGICA DE LOS REPORTES
   }
 
   cancelar() {

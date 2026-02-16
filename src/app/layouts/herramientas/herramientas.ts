@@ -31,8 +31,8 @@ export class Herramientas {
     this.layoutService.setTituloMobile('Panel de Herramientas');
   }
 
-  // Funciones auxiliares
-  crearReporte() {
-    this.router.navigate(['/reporte']);
-  }
+    // Funciones auxiliares
+    crearReporte() {
+      this.router.navigate(['/principal/reportes']);
+    }
 }

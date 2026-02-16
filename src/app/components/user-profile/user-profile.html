@@ -4,7 +4,6 @@
     class="p-4 border-t border-white/10 flex items-center gap-3 cursor-pointer"
     (click)="abrirModal($event)"
   >
-
     <!-- Avatar -->
     <div
       class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white">
@@ -14,43 +13,107 @@
     <!-- Info -->
     <div>
       <p class="text-sm font-semibold">
-        {{ u.nombre }} {{ u.apellido }}
+        {{ nombreCompleto }}
       </p>
       <p class="text-xs text-gray-400">
         Administrador
       </p>
     </div>
-
   </div>
 }
 
 <!-- Modal -->
 @if (isOpen && usuario) {
   <div class="fixed inset-0 flex items-center justify-center z-50">
-
     <div
       class="bg-white rounded-lg shadow-lg w-96 p-6 relative"
       (click)="$event.stopPropagation()"
     >
-      <h2 class="text-xl font-bold mb-4 text-black">
-        Perfil de Usuario
-      </h2>
+      @if (!modoEdicion) {
+        <!-- Modo vista -->
+        <h2 class="text-xl font-bold mb-4 text-black">
+          Perfil de Usuario
+        </h2>
 
-      <p class="text-black">
-        Nombre: {{ usuario.nombre }} {{ usuario.apellido }}
-      </p>
+        <div class="space-y-2">
+          <p class="text-black">
+            <span class="font-semibold">Nombre:</span> {{ usuario.nombre }}
+          </p>
+          <p class="text-black">
+            <span class="font-semibold">Apellido Paterno:</span> {{ apellidoPaterno }}
+          </p>
+          <p class="text-black">
+            <span class="font-semibold">Apellido Materno:</span> {{ apellidoMaterno }}
+          </p>
+          <p class="text-black">
+            <span class="font-semibold">Cargo:</span> Administrador
+          </p>
+        </div>
 
-      <p class="text-black">
-        Cargo: ADministrador
-      </p>
+        <div class="mt-4 flex gap-2">
+          <button
+            class="bg-blue-500 text-white px-3 py-1 rounded"
+            (click)="editarPerfil()"
+          >
+            Editar
+          </button>
+          <button
+            class="bg-red-500 text-white px-3 py-1 rounded"
+            (click)="cerrarModal()"
+          >
+            Cerrar
+          </button>
+        </div>
+      } @else {
+        <!-- Modo edición -->
+        <h2 class="text-xl font-bold mb-4 text-black">
+          Editar Perfil
+        </h2>
 
-      <button
-        class="mt-4 bg-red-500 text-white px-3 py-1 rounded"
-        (click)="cerrarModal()"
-      >
-        Cerrar
-      </button>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Nombre</label>
+            <input
+              type="text"
+              [(ngModel)]="nombreEditado"
+              class="w-full border rounded p-2 text-black"
+            >
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Apellido Paterno</label>
+            <input
+              type="text"
+              [(ngModel)]="apellidoPaterno"
+              class="w-full border rounded p-2 text-black"
+            >
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Apellido Materno</label>
+            <input
+              type="text"
+              [(ngModel)]="apellidoMaterno"
+              class="w-full border rounded p-2 text-black"
+            >
+          </div>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+          <button
+            class="bg-green-500 text-white px-3 py-1 rounded"
+            (click)="guardarCambios()"
+          >
+            Guardar
+          </button>
+          <button
+            class="bg-gray-500 text-white px-3 py-1 rounded"
+            (click)="cancelarEdicion()"
+          >
+            Cancelar
+          </button>
+        </div>
+      }
     </div>
-
   </div>
 }
