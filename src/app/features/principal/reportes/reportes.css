@@ -1,3 +1,6 @@
-:host {
-  display: block;
+/* Mensaje movil */
+@media (max-width: 640px) {
+  .min-h-screen {
+    padding: 1rem;
+  }
 }

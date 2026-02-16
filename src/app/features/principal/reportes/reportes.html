@@ -1,15 +1,99 @@
-<!-- MOBILE -->
-@if (isHandset$ | async) {
-<div class="pt-4">
-    <!-- Importando componente -->
-    <app-reportes-lista class="h-full block"></app-reportes-lista>
-</div>
-}
+<div class="flex flex-col bg-gray-100 h-full p-6 gap-6">
 
-<!-- DESKTOP -->
-@if (isDesktop$ | async) {
-<div class="">
-    <!-- Importando componente -->
-    <app-reportes-lista class="h-full block"></app-reportes-lista>
+  <!-- HEADER -->
+  <div class="flex items-center gap-3">
+    <button
+      (click)="volver()"
+      class="text-gray-600 hover:text-black flex items-center gap-2"
+    >
+      <mat-icon>arrow_back</mat-icon>
+      <span>Volver</span>
+    </button>
+
+    <h2 class="text-lg font-semibold">Crear Reporte</h2>
+  </div>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="bg-white rounded-xl shadow-lg p-10">
+
+    <div class="border border-gray-300 rounded-lg p-10">
+
+      <h3 class="text-2xl font-semibold text-center mb-2">
+        Importar datos para el reporte
+      </h3>
+
+      <p class="text-sm text-gray-500 text-center mb-10">
+        Recuerda que se registra un historial de reportes generados.
+      </p>
+
+      <div class="flex gap-8">
+
+        <!-- IMPORTAR -->
+        <div class="flex items-center">
+          <label
+            class="cursor-pointer border rounded-lg p-8 text-center hover:bg-gray-100 w-40"
+          >
+            <mat-icon class="text-4xl mb-3">upload_file</mat-icon>
+            <div class="text-sm font-medium">Importar los datos</div>
+            <input type="file" hidden (change)="seleccionarArchivo($event)" />
+          </label>
+        </div>
+
+        <div class="flex-1 border rounded-lg p-8 flex flex-col items-center justify-center min-h-65">
+
+          @if (estado === 'idle') {
+            <div class="text-gray-400 text-sm">
+              Previsualización de datos importados
+            </div>
+          }
+
+          @if (estado === 'loading') {
+            <div class="flex flex-col items-center gap-4">
+              <div class="flex gap-3">
+                <div class="w-3 h-3 bg-black rounded-full animate-bounce"></div>
+                <div class="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                <div class="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.4s]"></div>
+              </div>
+              <div class="text-sm text-gray-500">
+                Los datos importados están cargando
+              </div>
+            </div>
+          }
+
+          <!-- PREVIEW -->
+          @if (estado === 'preview') {
+            <div class="w-full">
+              <div class="bg-gray-100 h-40 flex items-center justify-center text-sm text-gray-600 rounded">
+                Aquí irá la tabla de previsualización
+              </div>
+            </div>
+          }
+
+          <!-- BOTONES -->
+          <div class="flex gap-4 mt-8">
+            <button
+              (click)="cancelar()"
+              class="px-4 py-2 rounded bg-gray-300 text-gray-700"
+            >
+              Cancelar
+            </button>
+
+            <button
+              (click)="generarReporte()"
+              [disabled]="estado !== 'preview'"
+              class="px-6 py-2 rounded-full text-white transition"
+              [ngClass]="{
+                'bg-green-600 hover:bg-green-700': estado === 'preview',
+                'bg-green-300 cursor-not-allowed': estado !== 'preview'
+              }"
+            >
+              Generar reporte
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
-}

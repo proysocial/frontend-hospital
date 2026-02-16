@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { RecoverFlowService } from '../services/recover-flow.service'; //ELIMINAR SOLO PARA VER FLUJO
 import Swal from 'sweetalert2';
+import { environment } from '../../../../environments/environment'; // IMPORT AGREGADO
 
 @Component({
   selector: 'app-forgot-password',
@@ -18,6 +19,7 @@ export class ForgotPassword {
   private device = inject(Device);
   private router = inject(Router);
   private recoverFlow = inject(RecoverFlowService);//ELIMINAR SOLO PARA VER FLUJO
+  private API = environment.API_URL; // VARIABLE AGREGADA
   email = '';
 
   isHandset$ = this.device.isHandset$;
@@ -36,6 +38,9 @@ export class ForgotPassword {
     // RUtas: 
     // http://127.0.0.1:8000/api/v1/recuperar/enviar-codigo/ ----> Envia código al correo que se inserta de 6 digitos
     // http://127.0.0.1:8000/api/v1/recuperar/cambiar-contrasena/ ---> Modifica la contraseña
+    
+    console.log('Correo ingresado:', this.email); // LÍNEA AGREGADA - Para depuración
+    
     Swal.fire({
       icon: 'success',
       title: 'Solicitud enviada',
