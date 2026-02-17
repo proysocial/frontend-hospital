@@ -13,6 +13,8 @@ import { recoverGuard } from './features/auth/services/recover.guard';
 // App
 import { Dashboard } from './layouts/dashboard/dashboard';
 import { Reportes } from './features/principal/reportes/reportes';
+import { NuevoReporte } from './features/principal/reportes/nuevo-reporte/nuevo-reporte';
+
 import { Herramientas } from './layouts/herramientas/herramientas';
 
 
@@ -49,6 +51,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'reportes', pathMatch: 'full' },
       { path: 'reportes', component: Reportes },
+          { path: 'reportes/nuevo', component: NuevoReporte },
       { path: 'herramientas', component: Herramientas }
     ]
   },

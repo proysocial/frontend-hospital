@@ -5,6 +5,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { ReportesLista } from '../../components/reportes-lista/reportes-lista';
 import { LayoutService } from '../../services/layout.service';
 import Swal from 'sweetalert2';
+import { Router } from '@angular/router';
+
 
 @Component({
   selector: 'app-herramientas',
@@ -15,6 +17,7 @@ import Swal from 'sweetalert2';
 })
 export class Herramientas { 
   //Inyección de dependencia de servicios 
+  private router = inject(Router);
   private device = inject(Device)
   private layoutService = inject(LayoutService);
 
@@ -30,13 +33,7 @@ export class Herramientas {
 
   // Funciones auxiliares
   crearReporte() {
-    // TODO: MODULO DE CREACION DE REPORTE
-    Swal.fire({
-      title: 'Crear Nuevo Reporte',
-      text: 'Funcionalidad en desarrollo',
-      icon: 'info',
-      confirmButtonText: 'Ok',
-      confirmButtonColor: '#22c55e'
-    });
-  }
+  this.router.navigate(['/principal/reportes/nuevo']);
+}
+
 }
