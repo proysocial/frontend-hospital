@@ -38,4 +38,11 @@ export class UserProfile {
   cerrarModal() {
     this.isOpen = false;
   }
+
+  logout(event: MouseEvent) {
+    event.stopPropagation();
+
+    localStorage.removeItem('usuario');
+    window.location.href = '/login';
+  }
 }

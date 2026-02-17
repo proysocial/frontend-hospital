@@ -44,13 +44,16 @@ export class Auth {
   }
 
   logout() {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('usuario');
-    this.usuario = null;
-    this._isLoggedIn.set(false);
-    this.router.navigate(['/']);
-  }
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('usuario');
+
+  this.usuario = null;
+  this._isLoggedIn.set(false);
+
+  this.router.navigateByUrl('/', { replaceUrl: true });
+}
+
 
   getAccessToken() {
     return localStorage.getItem('access_token');

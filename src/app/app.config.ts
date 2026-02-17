@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
 
-    provideRouter(routes, withEnabledBlockingInitialNavigation()),
+    provideRouter(routes),
 
     provideHttpClient(
       withFetch(),

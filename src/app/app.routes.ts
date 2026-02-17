@@ -15,9 +15,6 @@ import { Dashboard } from './layouts/dashboard/dashboard';
 import { Reportes } from './features/principal/reportes/reportes';
 import { Herramientas } from './layouts/herramientas/herramientas';
 
-// Errors
-import { NotFound } from './features/errors/not-found';
-
 export const routes: Routes = [
 
   // Auth
@@ -53,6 +50,7 @@ export const routes: Routes = [
     ]
   },
 
-  // Error
-  { path: '**', component: NotFound }
+  // Wildcard (evita 404 tras logout)
+  { path: '**', redirectTo: 'login' }
+
 ];
