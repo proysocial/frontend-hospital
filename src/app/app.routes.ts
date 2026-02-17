@@ -14,7 +14,7 @@ import { recoverGuard } from './features/auth/services/recover.guard';
 import { Dashboard } from './layouts/dashboard/dashboard';
 import { Reportes } from './features/principal/reportes/reportes';
 import { NuevoReporte } from './features/principal/reportes/nuevo-reporte/nuevo-reporte';
-
+import { DashboardReportes } from './layouts/dashboard-reportes/dashboard-reportes';
 import { Herramientas } from './layouts/herramientas/herramientas';
 
 
@@ -50,8 +50,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'reportes', pathMatch: 'full' },
-      { path: 'reportes', component: Reportes },
-          { path: 'reportes/nuevo', component: NuevoReporte },
+
+       {
+        path: 'reportes',
+        children: [
+          { path: '', component: Reportes },               // lista
+          { path: 'nuevo', component: NuevoReporte },      // subir TXT
+          { path: 'dashboard', component: DashboardReportes } // gráficos
+        ]
+      },
+
       { path: 'herramientas', component: Herramientas }
     ]
   },

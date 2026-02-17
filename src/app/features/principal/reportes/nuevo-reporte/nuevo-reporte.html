@@ -39,14 +39,14 @@
         </div>
 
         <!-- PREVIEW PANEL -->
-        <div class="flex-1 border rounded-lg p-8 flex flex-col items-center justify-center min-h-[260px]">
+        <div class="flex-1 border rounded-lg p-8 flex flex-col items-center justify-center min-h-65">
 
           <!-- IDLE -->
-          @if (estado === 'idle') {
+          <!-- @if (estado === 'idle') {
             <div class="text-gray-400 text-sm">
               Previsualización de datos importados
             </div>
-          }
+          } -->
 
           <!-- LOADING -->
           @if (estado === 'loading') {
@@ -75,7 +75,7 @@
           <div class="flex gap-4 mt-8">
             <button
               (click)="cancelar()"
-              class="px-4 py-2 rounded bg-gray-300 text-gray-700 hover:bg-gray-400 transition"
+              class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-400 transition"
             >
               Cancelar
             </button>
@@ -86,7 +86,7 @@
               class="px-6 py-2 rounded-full text-white transition"
               [ngClass]="{
                 'bg-green-600 hover:bg-green-700': estado === 'preview',
-                'bg-green-300 cursor-not-allowed': estado !== 'preview'
+                'bg-green-500 cursor-not-allowed': estado !== 'preview'
               }"
             >
               Generar reporte
