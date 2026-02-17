@@ -54,6 +54,7 @@ export const routes: Routes = [
   },
 
   // Wildcard (evita 404 tras logout)
-  { path: '**', component: NotFound }
+  { path: '404', component: NotFound },
+  { path: '**', redirectTo: '404' }
 
 ];
