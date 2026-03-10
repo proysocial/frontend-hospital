@@ -1,117 +1,294 @@
-<div class="flex flex-col bg-gray-100 min-h-full p-6 gap-6">
+<div class="dash-wrap" [class.area-mode]="areaActiva">
 
-  <!-- MOBILE -->
+  <!-- ══ MOBILE ═══════════════════════════════════════════════════ -->
   @if (isHandset$ | async) {
-    <div class="flex items-center justify-center h-64 text-gray-500 text-center px-4">
-      <p> El dashboard aún no está habilitado para dispositivos móviles.</p>
+    <div class="mobile-msg">
+      <mat-icon>desktop_windows</mat-icon>
+      <p>Este dashboard está optimizado para escritorio.</p>
     </div>
   }
 
-  <!-- DESKTOP / TABLET -->
+  <!-- ══ DESKTOP ══════════════════════════════════════════════════ -->
   @if (isDesktop$ | async) {
-    <div class="p-4">
-      <button
-        (click)="volver()"
-        class="text-gray-600 hover:text-black flex items-center gap-2 mb-5"
-       >
-        <mat-icon>arrow_back</mat-icon>
-        <span>Volver</span>
+
+    <!-- ─ TOPBAR ─────────────────────────────────────────────────── -->
+    <header class="topbar">
+      <div class="topbar-l">
+        <button class="back-btn" (click)="volver()">
+          <mat-icon>arrow_back_ios_new</mat-icon>
+        </button>
+        <div class="brand">
+          <span class="brand-logo">🏥</span>
+          <div>
+            <span class="brand-name">MEDIREPORT</span>
+            <span class="brand-sub">Imágenes Médicas · H.N. Ramiro Prialé</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros de fecha en topbar -->
+      <div class="topbar-filters">
+        <div class="flt-chip">
+          <mat-icon>calendar_today</mat-icon>
+          <input type="date" [(ngModel)]="fechaInicio" class="flt-input" placeholder="Desde" />
+        </div>
+        <span class="flt-sep">—</span>
+        <div class="flt-chip">
+          <mat-icon>calendar_today</mat-icon>
+          <input type="date" [(ngModel)]="fechaFin" class="flt-input" placeholder="Hasta" />
+        </div>
+        <button class="btn-apply" (click)="cargar()">
+          <mat-icon>filter_alt</mat-icon> Aplicar
+        </button>
+        @if (fechaInicio || fechaFin || areaActiva) {
+          <button class="btn-clear" (click)="limpiarFiltros()" title="Limpiar filtros">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </div>
+
+      <div class="topbar-r">
+        @if (areaActiva) {
+          <span class="area-pill">
+            <mat-icon>{{ iconArea(areaActiva) }}</mat-icon>
+            {{ areaActiva }}
+          </span>
+        }
+      </div>
+    </header>
+
+    <!-- ─ ÁREA TABS ──────────────────────────────────────────────── -->
+    <nav class="area-tabs">
+      <button class="tab-btn" [class.tab-active]="!areaActiva" (click)="seleccionarArea(null)">
+        <mat-icon>dashboard</mat-icon>
+        <span>GLOBAL</span>
+        <span class="tab-count">{{ fmt(totalSolicitados) }}</span>
       </button>
 
-      <h1 class="text-3xl font-bold mb-2 text-gray-800">📊 Dashboard Gerencial</h1>
-      <p class="text-gray-500 mb-6 text-sm">Resumen de actividad del servicio de imágenes</p>
+      @for (a of areas; track a.arealab) {
+        <button class="tab-btn" [class.tab-active]="areaActiva === a.arealab"
+          (click)="seleccionarArea(a.arealab)">
+          <mat-icon>{{ iconArea(a.arealab) }}</mat-icon>
+          <span>{{ a.arealab }}</span>
+          <span class="tab-count">{{ fmt(a.total) }}</span>
+        </button>
+      }
+    </nav>
 
-      <!-- LOADING -->
+    <!-- ─ MAIN ───────────────────────────────────────────────────── -->
+    <main class="dash-main">
+
       @if (loading) {
-        <div class="flex flex-col justify-center items-center h-64 gap-3">
-          <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
-          <p class="text-gray-500">Cargando métricas...</p>
+        <div class="loading-box">
+          <div class="spin"></div>
+          <p>Cargando métricas…</p>
         </div>
       }
 
-      <!-- DASHBOARD -->
       @if (!loading) {
 
-        <!-- KPIs -->
-        <div class="grid grid-cols-5 gap-4 mb-6">
-          <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-blue-500">
-            <p class="text-xs text-gray-500 uppercase font-semibold">Total Pacientes</p>
-            <p class="text-3xl font-bold text-blue-600">{{ totalPacientes }}</p>
-          </div>
-          <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-pink-400">
-            <p class="text-xs text-gray-500 uppercase font-semibold">Femenino</p>
-            <p class="text-3xl font-bold text-pink-500">{{ totalFemenino }}</p>
-          </div>
-          <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-indigo-400">
-            <p class="text-xs text-gray-500 uppercase font-semibold">Masculino</p>
-            <p class="text-3xl font-bold text-indigo-500">{{ totalMasculino }}</p>
-          </div>
-          <div class="bg-white rounded-xl shadow p-4 text-center border-l-4 border-emerald-400 col-span-2">
-            <p class="text-xs text-gray-500 uppercase font-semibold">Examen más solicitado</p>
-            <p class="text-sm font-bold text-emerald-600 truncate" [title]="examenTop">{{ examenTop }}</p>
-          </div>
-        </div>
+        <!-- ══ VISTA GLOBAL ════════════════════════════════════════ -->
+        @if (!areaActiva) {
 
-        <!-- FILA 1 -->
-        <div class="grid grid-cols-2 gap-6 mb-6">
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">📋 Exámenes más solicitados</h2>
-            <div echarts [options]="examenesChart" class="h-80"></div>
-          </div>
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">⚧ Distribución por sexo</h2>
-            <div echarts [options]="sexoChart" class="h-80"></div>
-          </div>
-        </div>
+          <h2 class="page-title">📊 Dashboard Gerencial</h2>
+          <p class="page-sub">Resumen de actividad del servicio de imágenes médicas</p>
 
-        <!-- FILA 2 -->
-        <div class="grid grid-cols-3 gap-6 mb-6">
-          <div class="bg-white rounded-xl shadow p-4 col-span-2">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">🏥 Servicios con mayor demanda</h2>
-            <div echarts [options]="serviciosChart" class="h-80"></div>
+          <!-- KPI STRIP -->
+          <div class="kpi-row">
+            <div class="kpi kpi-blue">
+              <div class="kpi-lbl"><mat-icon>assignment</mat-icon> Solicitados</div>
+              <div class="kpi-num">{{ fmt(totalSolicitados) }}</div>
+            </div>
+            <div class="kpi kpi-teal">
+              <div class="kpi-lbl"><mat-icon>task_alt</mat-icon> Con Resultado</div>
+              <div class="kpi-num">{{ fmt(totalConResultado) }}</div>
+            </div>
+            <div class="kpi kpi-amber">
+              <div class="kpi-lbl"><mat-icon>percent</mat-icon> Tasa Resultado</div>
+              <div class="kpi-num">{{ tasaResultado }}%</div>
+            </div>
+            <div class="kpi kpi-pink">
+              <div class="kpi-lbl"><mat-icon>female</mat-icon> Femenino</div>
+              <div class="kpi-num">{{ fmt(totalFemenino) }}</div>
+            </div>
+            <div class="kpi kpi-indigo">
+              <div class="kpi-lbl"><mat-icon>male</mat-icon> Masculino</div>
+              <div class="kpi-num">{{ fmt(totalMasculino) }}</div>
+            </div>
+            <div class="kpi kpi-purple kpi-wide">
+              <div class="kpi-lbl"><mat-icon>emoji_events</mat-icon> Examen Top</div>
+              <div class="kpi-num kpi-sm" [title]="examenTop">{{ examenTop }}</div>
+            </div>
           </div>
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">📅 Tendencia por fecha</h2>
-            <div echarts [options]="tendenciaChart" class="h-80"></div>
-          </div>
-        </div>
 
-        <!-- FILA 3 -->
-        <div class="grid grid-cols-2 gap-6 mb-6">
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">🕐 Horas pico de atención</h2>
-            <div echarts [options]="horasChart" class="h-72"></div>
+          <!-- ── Sección: KPIs visuales ─────────────────────────────── -->
+          <div class="sec-hd"><mat-icon>route</mat-icon> Trazabilidad y Distribución Global</div>
+          <div class="row3">
+            <div class="card">
+              <div class="card-ttl">📡 Cobertura de Resultados</div>
+              <div echarts [options]="trazabilidadChart" class="ch280"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">👥 Distribución por Sexo</div>
+              <div echarts [options]="sexoChart" class="ch280"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">🛡️ Tipo de Seguro</div>
+              <div echarts [options]="seguroChart" class="ch280"></div>
+            </div>
           </div>
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">🎂 Distribución por edad</h2>
-            <div echarts [options]="edadChart" class="h-72"></div>
-          </div>
-        </div>
 
-        <!-- FILA 4 -->
-        <div class="grid grid-cols-3 gap-6 mb-6">
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">🛡️ Tipo de seguro</h2>
-            <div echarts [options]="seguroChart" class="h-72"></div>
+          <!-- ── Sección: Top exámenes & doctores ──────────────────── -->
+          <div class="sec-hd"><mat-icon>bar_chart</mat-icon> Top Exámenes y Doctores Solicitantes</div>
+          <div class="row2">
+            <div class="card card-lg">
+              <div class="card-ttl">📋 Top 10 Exámenes más Solicitados</div>
+              <div echarts [options]="examenesChart" class="ch320"></div>
+            </div>
+            <div class="card card-md">
+              <div class="card-ttl">👨‍⚕️ Top Doctores que más Solicitan</div>
+              <div echarts [options]="doctoresChart" class="ch320"></div>
+            </div>
           </div>
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">🔬 Área de laboratorio</h2>
-            <div echarts [options]="areaChart" class="h-72"></div>
+
+          <!-- ── Sección: Diagnósticos CIE-10 ─────────────────────── -->
+          <div class="sec-hd"><mat-icon>medical_information</mat-icon> Diagnósticos CIE-10 más Frecuentes (resultados)</div>
+          <div class="row1">
+            <div class="card">
+              <div class="card-ttl">🏥 Top Diagnósticos CIE-10</div>
+              <div echarts [options]="cie10Chart" class="ch320"></div>
+            </div>
           </div>
-          <div class="bg-white rounded-xl shadow p-4">
-            <h2 class="text-sm font-semibold text-gray-600 mb-2">👨‍⚕️ Top doctores</h2>
-            <div echarts [options]="doctoresChart" class="h-72"></div>
+
+          <!-- ── Sección: Demanda operativa ───────────────────────── -->
+          <div class="sec-hd"><mat-icon>trending_up</mat-icon> Análisis de Demanda Operativa</div>
+          <div class="row3">
+            <div class="card card-md">
+              <div class="card-ttl">🏢 Servicios con Mayor Demanda</div>
+              <div echarts [options]="serviciosChart" class="ch300"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">📈 Tendencia Mensual</div>
+              <div echarts [options]="tendenciaChart" class="ch300"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">⏰ Horas Pico de Atención</div>
+              <div echarts [options]="horasChart" class="ch300"></div>
+            </div>
           </div>
-        </div>
 
-        <!-- FILA 5 -->
-        <div class="bg-white rounded-xl shadow p-4 mb-6">
-          <h2 class="text-sm font-semibold text-gray-600 mb-2">🏢 Pacientes por sede</h2>
-          <div echarts [options]="sedeChart" class="h-72"></div>
-        </div>
+          <!-- ── Sección: Perfil de pacientes ─────────────────────── -->
+          <div class="sec-hd"><mat-icon>people</mat-icon> Perfil de Pacientes</div>
+          <div class="row2">
+            <div class="card">
+              <div class="card-ttl">🎂 Distribución por Edad</div>
+              <div echarts [options]="edadChart" class="ch280"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">🏗️ Exámenes por Sede</div>
+              <div echarts [options]="sedeChart" class="ch280"></div>
+            </div>
+          </div>
+        }
 
-      }
-    </div>
-  }
+        <!-- ══ VISTA POR ÁREA ══════════════════════════════════════ -->
+        @if (areaActiva && datosArea) {
 
+          <!-- Banner del área -->
+          <div class="area-banner">
+            <mat-icon class="ab-icon">{{ iconArea(areaActiva) }}</mat-icon>
+            <div class="ab-text">
+              <h2>{{ areaActiva }}</h2>
+              <span>Vista detallada · Trazabilidad completa por examen</span>
+            </div>
+            <div class="ab-kpis">
+              <div class="ab-kpi">
+                <span>Solicitados</span>
+                <strong>{{ fmt(areaSolicitados) }}</strong>
+              </div>
+              <div class="ab-kpi">
+                <span>Con resultado</span>
+                <strong>{{ fmt(areaConResultado) }}</strong>
+              </div>
+              <div class="ab-kpi">
+                <span>Tasa cobertura</span>
+                <strong [style.color]="areaTasa>=70?'#10B981':areaTasa>=40?'#F59E0B':'#EF4444'">
+                  {{ areaTasa }}%
+                </strong>
+              </div>
+              <div class="ab-kpi ab-kpi-wide">
+                <span>Examen top</span>
+                <strong [title]="areaExamenTop">{{ tr(areaExamenTop, 40) }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Sección: Trazabilidad del área ───────────────────── -->
+          <div class="sec-hd sec-colored">
+            <mat-icon>route</mat-icon> Trazabilidad del Área
+            <span class="sec-badge">¿Los exámenes llegan a un resultado?</span>
+          </div>
+          <div class="row4">
+            <div class="card">
+              <div class="card-ttl">📡 Gauge de Cobertura</div>
+              <div echarts [options]="areaGaugeChart" class="ch260"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">🔬 Normal vs Patológico</div>
+              <div echarts [options]="areaResultadoDonutChart" class="ch260"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">👥 Sexo de Pacientes</div>
+              <div echarts [options]="areaSexoChart" class="ch260"></div>
+            </div>
+            <div class="card">
+              <div class="card-ttl">📈 Tendencia Mensual</div>
+              <div echarts [options]="areaTendenciaChart" class="ch260"></div>
+            </div>
+          </div>
+
+          <!-- ── Sección: Examen → resultado (trazabilidad profunda) -->
+          <div class="sec-hd sec-colored">
+            <mat-icon>analytics</mat-icon> Trazabilidad por Examen
+            <span class="sec-badge">Solicitados vs con resultado estimado</span>
+          </div>
+          <div class="row1">
+            <div class="card">
+              <div class="card-ttl">📊 Exámenes Top: Solicitados vs Con Resultado</div>
+              <div echarts [options]="areaExamenResultadoChart" class="ch320"></div>
+            </div>
+          </div>
+
+          <!-- ── Sección: Top exámenes y servicios ────────────────── -->
+          <div class="sec-hd"><mat-icon>bar_chart</mat-icon> Top Exámenes y Servicios del Área</div>
+          <div class="row2">
+            <div class="card card-lg">
+              <div class="card-ttl">📋 Top Exámenes del Área</div>
+              <div echarts [options]="areaTopExamenesChart" class="ch320"></div>
+            </div>
+            <div class="card card-md">
+              <div class="card-ttl">🏥 Áreas de Lab que Atienden al Servicio</div>
+              <div echarts [options]="areaServiciosChart" class="ch320"></div>
+            </div>
+          </div>
+
+          <!-- ── Sección: Diagnósticos y doctores ─────────────────── -->
+          <div class="sec-hd"><mat-icon>medical_information</mat-icon> Diagnósticos y Doctores del Área</div>
+          <div class="row2">
+            <div class="card card-lg">
+              <div class="card-ttl">🏥 Top CIE-10 del Área</div>
+              <div echarts [options]="areaCIE10Chart" class="ch320"></div>
+            </div>
+            <div class="card card-md">
+              <div class="card-ttl">👨‍⚕️ Doctores que más Solicitan al Área</div>
+              <div echarts [options]="areaDoctorChart" class="ch320"></div>
+            </div>
+          </div>
+
+        }
+
+      }<!-- /!loading -->
+
+    </main>
+  }<!-- /isDesktop -->
 </div>

@@ -2,51 +2,41 @@
 
   <!-- HEADER -->
   <div class="flex items-center gap-3">
-    <button
-      (click)="volver()"
-      class="text-gray-600 hover:text-black flex items-center gap-2"
-    >
+    <button (click)="volver()" class="text-gray-600 hover:text-black flex items-center gap-2">
       <mat-icon>arrow_back</mat-icon>
       <span>Volver</span>
     </button>
-
   </div>
 
   <!-- CONTENEDOR PRINCIPAL -->
   <div class="bg-white rounded-xl shadow-lg p-10">
-
     <div class="border border-gray-300 rounded-lg p-10">
 
       <h3 class="text-2xl font-semibold text-center mb-2">
         Importar datos para el reporte
       </h3>
-
-      <p class="text-sm text-gray-500 text-center mb-10">
-        Recuerda que se registra un historial de reportes generados.
+      <p class="text-sm text-gray-500 text-center mb-2">
+        Selecciona <strong>uno o dos archivos TXT</strong>: el de solicitudes y/o el de resultados.
+      </p>
+      <p class="text-xs text-gray-400 text-center mb-10">
+        El sistema detecta automáticamente el tipo de cada archivo.
       </p>
 
       <div class="flex gap-8">
 
         <!-- IMPORTAR -->
         <div class="flex items-center">
-          <label
-            class="cursor-pointer border rounded-lg p-8 text-center hover:bg-gray-100 w-40"
-          >
+          <label class="cursor-pointer border rounded-lg p-8 text-center hover:bg-gray-100 w-44 transition">
             <mat-icon class="text-4xl mb-3">upload_file</mat-icon>
             <div class="text-sm font-medium">Importar los datos</div>
-            <input type="file" hidden (change)="seleccionarArchivo($event)" />
+            <div class="text-xs text-gray-400 mt-1">Máx. 2 archivos</div>
+            <!-- ← multiple aquí -->
+            <input type="file" accept=".txt" multiple hidden (change)="seleccionarArchivo($event)" />
           </label>
         </div>
 
         <!-- PREVIEW PANEL -->
         <div class="flex-1 border rounded-lg p-8 flex flex-col items-center justify-center min-h-65">
-
-          <!-- IDLE -->
-          <!-- @if (estado === 'idle') {
-            <div class="text-gray-400 text-sm">
-              Previsualización de datos importados
-            </div>
-          } -->
 
           <!-- LOADING -->
           @if (estado === 'loading') {
@@ -56,18 +46,34 @@
                 <div class="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.2s]"></div>
                 <div class="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.4s]"></div>
               </div>
-              <div class="text-sm text-gray-500">
-                Los datos importados están cargando
+              <div class="text-sm text-gray-500">Procesando archivos...</div>
+            </div>
+          }
+
+          <!-- PREVIEW: lista de archivos seleccionados -->
+          @if (estado === 'preview') {
+            <div class="w-full">
+              <p class="text-sm font-semibold text-gray-600 mb-3">
+                {{ archivos.length }} archivo(s) seleccionado(s):
+              </p>
+              <div class="flex flex-col gap-2">
+                @for (archivo of archivos; track archivo.name) {
+                  <div class="bg-gray-100 rounded-lg px-4 py-3 flex items-center gap-3">
+                    <mat-icon class="text-blue-500">description</mat-icon>
+                    <span class="text-sm text-gray-700 truncate">{{ archivo.name }}</span>
+                    <span class="text-xs text-gray-400 ml-auto whitespace-nowrap">
+                      {{ (archivo.size / 1024 / 1024 | number:'1.1-1') }} MB
+                    </span>
+                  </div>
+                }
               </div>
             </div>
           }
 
-          <!-- PREVIEW -->
-          @if (estado === 'preview') {
-            <div class="w-full">
-              <div class="bg-gray-100 h-40 flex items-center justify-center text-sm text-gray-600 rounded">
-                Archivo cargado: {{ archivo?.name }}
-              </div>
+          <!-- IDLE -->
+          @if (estado === 'idle') {
+            <div class="text-gray-400 text-sm">
+              Selecciona los archivos TXT para continuar
             </div>
           }
 
@@ -86,7 +92,7 @@
               class="px-6 py-2 rounded-full text-white transition"
               [ngClass]="{
                 'bg-green-600 hover:bg-green-700': estado === 'preview',
-                'bg-green-500 cursor-not-allowed': estado !== 'preview'
+                'bg-green-300 cursor-not-allowed': estado !== 'preview'
               }"
             >
               Generar reporte
@@ -94,9 +100,7 @@
           </div>
 
         </div>
-
       </div>
-
     </div>
   </div>
 </div>

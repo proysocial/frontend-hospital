@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { Reporte } from '../../../../services/reporte/reporte';
-
 
 type EstadoReporte = 'idle' | 'loading' | 'preview';
 
@@ -17,13 +16,12 @@ type EstadoReporte = 'idle' | 'loading' | 'preview';
 })
 export class NuevoReporte {
 
-  // Inyección de dependencias
   private router = inject(Router);
-  private reporteService = inject(Reporte)
+  private reporteService = inject(Reporte);
+  private cdr = inject(ChangeDetectorRef);
 
   estado: EstadoReporte = 'idle';
-  archivo: File | null = null;
-  datosReporte: any
+  archivos: File[] = [];   // ← ahora es array
 
   volver() {
     this.router.navigate(['/principal/herramientas']);
@@ -31,59 +29,33 @@ export class NuevoReporte {
 
   seleccionarArchivo(event: Event) {
     const input = event.target as HTMLInputElement;
-
     if (!input.files || input.files.length === 0) return;
 
-    this.archivo = input.files[0];
-    this.estado = 'loading';
-
-    console.log("Documento cargado: ", this.archivo)
-
-    if(this.archivo){
-      this.estado = "preview"
-    }
-
-    // Simulación de carga
-    /* setTimeout(() => {
-      this.estado = 'preview';
-    }, 1); */
+    this.archivos = Array.from(input.files);
+    this.estado = 'preview';
+    this.cdr.markForCheck();
   }
 
-
-  // Código Brittany:
-
-  /* generarReporte() {
-    if (this.estado !== 'preview') return;
-
-    console.log('Reporte generado:', this.archivo?.name);
-
-    // Después de generar, regresar a la lista
-    this.router.navigate(['/principal/reportes']);
-  } */
-
   generarReporte() {
-    if(!this.archivo) return
+    if (this.archivos.length === 0) return;
 
-    this.estado = 'loading'
+    this.estado = 'loading';
+    this.cdr.markForCheck();
 
-    this.reporteService.enviarArchivo(this.archivo).subscribe(
-      {
-        next: (data) => {
-          // console.log("Data procesado :D", data)
-          // this.datosReporte = data
-          // this.estado = 'preview'
-          this.router.navigate(['/principal/reportes/dashboard']);
-        }, 
-        error: (err) => {
-          // Interceptor consume el error 
-        }
+    this.reporteService.enviarArchivo(this.archivos).subscribe({
+      next: () => {
+        this.router.navigate(['/principal/reportes/dashboard']);
+      },
+      error: () => {
+        this.estado = 'preview';
+        this.cdr.markForCheck();
       }
-    )
-
-  }  
+    });
+  }
 
   cancelar() {
     this.estado = 'idle';
-    this.archivo = null;
+    this.archivos = [];
+    this.cdr.markForCheck();
   }
 }
