@@ -68,6 +68,13 @@ export class DashboardReportes implements OnInit {
   cie10Chart: any;
   trazabilidadChart: any;
   normalPatChart: any;
+  // ── Nuevos Gráficos GLOBALES ────────────────────────────────────────────
+  diaSemanaChart: any;
+  pacientesChart: any;
+  paretoCie10Chart: any;
+  curvaHorasChart: any;
+  segurosRoseChart: any;
+  sedesTreemapChart: any;
 
   // ── Gráficos POR ÁREA ────────────────────────────────────────────
   areaTopExamenesChart: any;
@@ -81,6 +88,10 @@ export class DashboardReportes implements OnInit {
   areaExamenResultadoChart: any;
   // Doctor → examen más solicitado
   areaDoctorChart: any;
+  // Nuevas métricas por área
+  areaDiaSemanaChart: any;
+  areaPacientesChart: any;
+  areaRadarSemanalChart: any;
 
   private readonly C = [
     '#1D6FD8','#10B981','#F59E0B','#EF4444','#8B5CF6',
@@ -192,6 +203,13 @@ export class DashboardReportes implements OnInit {
     this.gCIE10(d);
     this.gTrazabilidad(d);
     this.gNormalPat(d);
+    // Nuevos gráficos globales
+    this.gDiaSemana(d);
+    this.gPacientes(d);
+    this.gParetoCie10(d);
+    this.gCurvaHoras(d);
+    this.gSegurosRose(d);
+    this.gSedesTreemap(d);
   }
 
   private hBar(data: any[], key: string, color: string, truncN = 35) {
@@ -409,6 +427,155 @@ export class DashboardReportes implements OnInit {
     };
   }
 
+  // -- NUEVOS GRAFICOS GLOBALES --
+  private gDiaSemana(d: any) {
+    const raw = d.demanda_dia_semana ?? [];
+    const mapDias: Record<number, string> = {1:'Dom', 2:'Lun', 3:'Mar', 4:'Mié', 5:'Jue', 6:'Vie', 7:'Sáb'};
+    
+    const dataObj: Record<string, number> = {'Lun':0, 'Mar':0, 'Mié':0, 'Jue':0, 'Vie':0, 'Sáb':0, 'Dom':0};
+    raw.forEach((item: any) => {
+      if(mapDias[item.dia_semana]) dataObj[mapDias[item.dia_semana]] = item.total;
+    });
+
+    const orden = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    
+    this.diaSemanaChart = {
+      tooltip:{ trigger:'axis', axisPointer:{type:'shadow'} },
+      grid:{ left:8, right:12, bottom:8, top:8, containLabel:true },
+      xAxis:{ type:'category', data:orden, axisLabel:{fontSize:11, color:'#475569'} },
+      yAxis:{ type:'value', splitLine:{lineStyle:{color:'#f1f5f9'}}, axisLabel:{color:'#94a3b8'} },
+      series:[{
+        type:'bar', barMaxWidth:30,
+        data: orden.map(dia => dataObj[dia]),
+        itemStyle:{ color:'#14B8A6', borderRadius:[4,4,0,0] },
+        label:{show:true, position:'top', fontSize:11, color:'#475569'},
+      }],
+    };
+  }
+
+  private gPacientes(d: any) {
+    const data = (d.pacientes_frecuentes ?? []).slice(0, 10);
+    this.pacientesChart = this.hBar(data, 'paciente', '#F59E0B', 25);
+  }
+
+  private gParetoCie10(d: any) {
+    const data = (d.diagnosticos_cie10 ?? []).slice(0, 10);
+    const totalGeneral = data.reduce((sum: number, item: any) => sum + item.total, 0);
+    
+    let acumulado = 0;
+    const porcentajes = data.map((item: any) => {
+      acumulado += item.total;
+      return Number(((acumulado / totalGeneral) * 100).toFixed(1));
+    });
+
+    this.paretoCie10Chart = {
+      tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
+      grid: { left: 8, right: 40, bottom: 8, top: 30, containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: data.map((c: any) => c.diagnostico),
+        axisLabel: { fontSize: 10, color: '#475569' }
+      },
+      yAxis: [
+        { type: 'value', name: 'Volumen', splitLine: { lineStyle: { color: '#f1f5f9' } } },
+        { type: 'value', name: '% Acumulado', min: 0, max: 100, axisLabel: { formatter: '{value} %' } }
+      ],
+      series: [
+        {
+          name: 'Volumen',
+          type: 'bar',
+          data: data.map((c: any) => c.total),
+          itemStyle: { color: '#3B82F6', borderRadius: [4, 4, 0, 0] }
+        },
+        {
+          name: '% Acumulado',
+          type: 'line',
+          yAxisIndex: 1,
+          data: porcentajes,
+          itemStyle: { color: '#EF4444' },
+          lineStyle: { width: 3 },
+          symbol: 'circle',
+          symbolSize: 8
+        }
+      ]
+    };
+  }
+
+  private gCurvaHoras(d: any) {
+    const horasOrdenadas = [...(d.horas_pico ?? [])].sort((a, b) => 
+      (a.horsolic > b.horsolic) ? 1 : ((b.horsolic > a.horsolic) ? -1 : 0)
+    );
+
+    this.curvaHorasChart = {
+      tooltip: { trigger: 'axis' },
+      grid: { left: 8, right: 15, bottom: 8, top: 15, containLabel: true },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: horasOrdenadas.map((h: any) => h.horsolic),
+        axisLabel: { fontSize: 10, color: '#475569' }
+      },
+      yAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        name: 'Solicitudes',
+        type: 'line',
+        smooth: true,
+        data: horasOrdenadas.map((h: any) => h.total),
+        itemStyle: { color: '#F59E0B' },
+        areaStyle: {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: 'rgba(245, 158, 11, 0.5)' }, { offset: 1, color: 'rgba(245, 158, 11, 0.05)' }]
+          }
+        }
+      }]
+    };
+  }
+
+  private gSegurosRose(d: any) {
+    const sg = d.seguro_uso ?? [];
+    this.segurosRoseChart = {
+      tooltip: { trigger: 'item', formatter: '{b}: {c} pacientes ({d}%)' },
+      legend: { bottom: 0, textStyle: { fontSize: 10, color: '#475569' } },
+      series: [
+        {
+          name: 'Seguro',
+          type: 'pie',
+          radius: [20, 100],
+          center: ['50%', '45%'],
+          roseType: 'area',
+          itemStyle: { borderRadius: 4 },
+          data: sg.map((s: any, i: number) => ({
+            name: this.tr(s.tipo_seguro?.trim() ?? '', 15),
+            value: s.total,
+            itemStyle: { color: this.color(i) }
+          }))
+        }
+      ]
+    };
+  }
+
+  private gSedesTreemap(d: any) {
+    const sd = (d.sedes ?? []).filter((s: any) => s.sede?.trim());
+    this.sedesTreemapChart = {
+      tooltip: { formatter: '{b}: <b>{c}</b> atenciones' },
+      series: [{
+        type: 'treemap',
+        width: '100%',
+        height: '100%',
+        roam: false,
+        nodeClick: false,
+        breadcrumb: { show: false },
+        itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 },
+        data: sd.map((s: any, i: number) => ({
+          name: s.sede,
+          value: s.total,
+          itemStyle: { color: this.color(i) }
+        }))
+      }]
+    };
+  }
+
   // ════════════════════════════════════════════════════════════════
   //  GRÁFICOS POR ÁREA
   // ════════════════════════════════════════════════════════════════
@@ -575,5 +742,96 @@ export class DashboardReportes implements OnInit {
         label:{show:true, position:'right', fontSize:11, color:'#334155'},
       }],
     };
+
+    // -- NUEVOS GRAFICOS POR AREA --
+    this.gAreaDiaSemana(a);
+    this.gAreaPacientes(a);
+    this.gAreaTendenciaResultados(a);
+    this.gAreaRadarSemanal(a);
   }
+
+  // NUEVOS GRÁFICOS POR ÁREAS
+  private gAreaDiaSemana(a: any) {
+    const raw = a.dia_semana ?? [];
+    const mapDias: Record<number, string> = {1:'Dom', 2:'Lun', 3:'Mar', 4:'Mié', 5:'Jue', 6:'Vie', 7:'Sáb'};
+    const dataObj: Record<string, number> = {'Lun':0, 'Mar':0, 'Mié':0, 'Jue':0, 'Vie':0, 'Sáb':0, 'Dom':0};
+    
+    raw.forEach((item: any) => {
+      if(mapDias[item.dia_semana]) dataObj[mapDias[item.dia_semana]] = item.total;
+    });
+
+    const orden = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    
+    this.areaDiaSemanaChart = {
+      tooltip:{ trigger:'axis', axisPointer:{type:'shadow'} },
+      grid:{ left:8, right:12, bottom:8, top:8, containLabel:true },
+      xAxis:{ type:'category', data:orden, axisLabel:{fontSize:11, color:'#475569'} },
+      yAxis:{ type:'value', splitLine:{lineStyle:{color:'#f1f5f9'}}, axisLabel:{color:'#94a3b8'} },
+      series:[{
+        type:'bar', barMaxWidth:30,
+        data: orden.map(dia => dataObj[dia]),
+        itemStyle:{ color:'#14B8A6', borderRadius:[4,4,0,0] },
+        label:{show:true, position:'top', fontSize:11, color:'#475569'},
+      }],
+    };
+  }
+
+  private gAreaPacientes(a: any) {
+    const data = (a.pacientes_frecuentes ?? []).slice(0, 10);
+    this.areaPacientesChart = this.hBar(data, 'paciente', '#F59E0B', 25);
+  }
+
+  private gAreaTendenciaResultados(a: any) {
+    const raw = a.tendencia_resultados ?? [];
+    const mesesSet = new Set<string>();
+    const seriesObj: Record<string, Record<string, number>> = {};
+    
+    raw.forEach((item: any) => {
+      mesesSet.add(item.mes);
+      if(!seriesObj[item.resultado]) seriesObj[item.resultado] = {};
+      seriesObj[item.resultado][item.mes] = item.total;
+    });
+
+    const meses = Array.from(mesesSet).sort();
+    const resultadosKeys = Object.keys(seriesObj);
+  }
+
+  private gAreaRadarSemanal(a: any) {
+    const raw = a.dia_semana ?? [];
+    // 1:Dom, 2:Lun, 3:Mar, 4:Mié, 5:Jue, 6:Vie, 7:Sáb
+    const mapDias: Record<number, string> = { 2:'Lunes', 3:'Martes', 4:'Miércoles', 5:'Jueves', 6:'Viernes', 7:'Sábado', 1:'Domingo' };
+    const dataObj: Record<string, number> = { 'Lunes':0, 'Martes':0, 'Miércoles':0, 'Jueves':0, 'Viernes':0, 'Sábado':0, 'Domingo':0 };
+    
+    raw.forEach((item: any) => {
+      if(mapDias[item.dia_semana]) dataObj[mapDias[item.dia_semana]] = item.total;
+    });
+
+    const maxVal = Math.max(...Object.values(dataObj), 10);
+
+    this.areaRadarSemanalChart = {
+      tooltip: { trigger: 'item' },
+      radar: {
+        indicator: [
+          { name: 'Lun', max: maxVal }, { name: 'Mar', max: maxVal },
+          { name: 'Mié', max: maxVal }, { name: 'Jue', max: maxVal },
+          { name: 'Vie', max: maxVal }, { name: 'Sáb', max: maxVal }, { name: 'Dom', max: maxVal }
+        ],
+        axisName: { color: '#475569', fontWeight: 'bold' },
+        splitArea: { areaStyle: { color: ['#f8fafc', '#f1f5f9'] } }
+      },
+      series: [{
+        name: 'Atenciones',
+        type: 'radar',
+        data: [{
+          value: [dataObj['Lunes'], dataObj['Martes'], dataObj['Miércoles'], dataObj['Jueves'], dataObj['Viernes'], dataObj['Sábado'], dataObj['Domingo']],
+          name: 'Volumen',
+          areaStyle: { color: 'rgba(16, 185, 129, 0.4)' },
+          lineStyle: { color: '#10B981', width: 2 },
+          itemStyle: { color: '#10B981' }
+        }]
+      }]
+    };
+  }
+  
+
 }

@@ -25,8 +25,7 @@ export class ReportesLista implements OnInit {
   vistaActual: 'list' | 'grid' = 'list';
   busqueda: string = '';
 
-  //Datos temporales para simular
-  reportes: Reporte[] = [
+  reportesOriginales: Reporte[] = [
     {
       id: 1,
       nombre: 'Reporte de laboratorio emergencia',
@@ -61,8 +60,11 @@ export class ReportesLista implements OnInit {
     }
   ];
   
+  reportes: Reporte[] = [];
+  
   //Función de Inicio
   ngOnInit() {
+    this.reportes = [...this.reportesOriginales];
     this.obtenerReportes();
   }
   
@@ -77,8 +79,17 @@ export class ReportesLista implements OnInit {
   }
 
   filtrarReportesPorNombre() {
-    console.log('Filtrando reportes por nombre:', this.busqueda);
-    // TODO: Implementar lógica de filtrado
+    const termino = this.busqueda.toLowerCase().trim();
+    if (termino === '') {
+      this.reportes = [...this.reportesOriginales];
+      return;
+    }
+
+    this.reportes = this.reportesOriginales.filter(reporte => 
+      reporte.nombre.toLowerCase().includes(termino) || 
+      reporte.creadoPor.toLowerCase().includes(termino) ||
+      reporte.descripcion.toLowerCase().includes(termino)
+    );
   }
 
   abrirFiltros() {

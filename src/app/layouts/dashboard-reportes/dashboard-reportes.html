@@ -223,6 +223,45 @@
             <div echarts [options]="sedeChart" class="h-[280px] min-h-[240px] w-full"></div>
           </div>
         </div>
+
+        <!-- -- NUEVOS GRAFICOS VISTA GLOBAL -->
+        <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
+          <mat-icon class="text-base w-4 h-4 text-emerald-500">insights</mat-icon> Patrones
+        </div>
+        <div class="flex flex-wrap gap-3 mb-3">
+          <div class="flex-1 min-w-[200px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">📅 Demanda por Día de la Semana</div>
+            <div echarts [options]="diaSemanaChart" class="h-[280px] min-h-[240px] w-full"></div>
+          </div>
+          <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👤 Top 10 Pacientes Frecuentes</div>
+            <div echarts [options]="pacientesChart" class="h-[280px] min-h-[240px] w-full"></div>
+          </div>
+          <div class="flex-1 min-w-[300px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏥 Volumen por Sede de Atención</div>
+            <div echarts [options]="sedeChart" class="h-[280px] min-h-[240px] w-full"></div>
+          </div>
+        </div>
+
+        <div class="flex-[1.5] min-w-[360px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col mt-4">
+          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🎯 Pareto de Diagnósticos (CIE-10)</div>
+          <div echarts [options]="paretoCie10Chart" class="h-[320px] min-h-[280px] w-full"></div>
+        </div>
+
+        <div class="flex-1 min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col mt-4">
+          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">⏳ Curva de Demanda por Hora</div>
+          <div echarts [options]="curvaHorasChart" class="h-[320px] min-h-[280px] w-full"></div>
+        </div>
+
+        <div class="flex-1 min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col mt-4">
+          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">💳 Dependencia de Seguros</div>
+          <div echarts [options]="segurosRoseChart" class="h-[320px] min-h-[280px] w-full"></div>
+        </div>
+
+        <div class="flex-1 min-w-[360px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col mt-4">
+          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏢 Carga Operativa por Sede</div>
+          <div echarts [options]="sedesTreemapChart" class="h-[320px] min-h-[280px] w-full"></div>
+        </div>
       }
 
 
@@ -329,6 +368,28 @@
           </div>
         </div>
 
+        <!-- -- NUEVOS GRAFICOS VISTA POR ÁREAS -->
+        <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
+          <mat-icon class="text-base w-4 h-4 text-emerald-500">insights</mat-icon> Patrones Avanzados del Área
+        </div>
+        <div class="flex flex-wrap gap-3 mb-3">
+          <div class="flex-1 min-w-[200px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">📅 Demanda por Día de la Semana</div>
+            <div echarts [options]="areaDiaSemanaChart" class="h-[280px] min-h-[240px] w-full"></div>
+          </div>
+          <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👤 Top 10 Pacientes Frecuentes</div>
+            <div echarts [options]="areaPacientesChart" class="h-[280px] min-h-[240px] w-full"></div>
+          </div>
+          <div class="flex-1 min-w-[300px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">⚙️ Servicios dentro del Área</div>
+            <div echarts [options]="areaServiciosChart" class="h-[280px] min-h-[240px] w-full"></div>
+          </div>
+        </div>
+        <div class="flex-1 min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col">
+          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🕸️ Perfil de Demanda Semanal</div>
+          <div echarts [options]="areaRadarSemanalChart" class="h-[280px] min-h-[240px] w-full"></div>
+        </div>
       }
     }<!-- /!loading -->
   </div>
