@@ -1,5 +1,23 @@
-<div class="flex flex-col bg-gray-100 h-full p-6 gap-6">
+<div class="flex flex-col bg-gray-100 h-full p-4 md:p-6 gap-4 md:gap-6">
+  @if (estado === 'loading') {
+    <div class="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
 
+      <div class="bg-white rounded-xl shadow-lg px-10 py-8 flex flex-col items-center gap-5">
+
+        <div class="flex gap-2">
+          <div class="w-3 h-3 bg-gray-800 rounded-full animate-bounce"></div>
+          <div class="w-3 h-3 bg-gray-800 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+          <div class="w-3 h-3 bg-gray-800 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+        </div>
+
+        <div class="text-sm text-gray-600 font-medium">
+          Generando reporte...
+        </div>
+
+      </div>
+
+    </div>
+  }
   <!-- HEADER -->
   <div class="flex items-center gap-3">
     <button (click)="volver()" class="text-gray-600 hover:text-black flex items-center gap-2">
@@ -9,79 +27,135 @@
   </div>
 
   <!-- CONTENEDOR PRINCIPAL -->
-  <div class="bg-white rounded-xl shadow-lg p-10">
-    <div class="border border-gray-300 rounded-lg p-10">
+  <div class="bg-white rounded-xl shadow-lg p-6 md:p-10">
+    <div class="border border-gray-300 rounded-lg p-6 md:p-10">
 
-      <h3 class="text-2xl font-semibold text-center mb-2">
+      <!-- TITULO -->
+      <h3 class="text-xl md:text-2xl font-semibold text-center mb-2">
         Importar datos para el reporte
       </h3>
+
       <p class="text-sm text-gray-500 text-center mb-2">
         Selecciona <strong>uno o dos archivos TXT</strong>: el de solicitudes y/o el de resultados.
       </p>
-      <p class="text-xs text-gray-400 text-center mb-10">
+
+      <p class="text-xs text-gray-400 text-center mb-6">
         El sistema detecta automáticamente el tipo de cada archivo.
       </p>
 
-      <div class="flex gap-8">
+      <!-- ALERTA -->
+      @if (alerta) {
+        <div class="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mb-6 text-sm text-center">
+          {{ alerta }}
+        </div>
+      }
 
-        <!-- IMPORTAR -->
-        <div class="flex items-center">
-          <label class="cursor-pointer border rounded-lg p-8 text-center hover:bg-gray-100 w-44 transition">
-            <mat-icon class="text-4xl mb-3">upload_file</mat-icon>
-            <div class="text-sm font-medium">Importar los datos</div>
-            <div class="text-xs text-gray-400 mt-1">Máx. 2 archivos</div>
-            <!-- ← multiple aquí -->
-            <input type="file" accept=".txt" multiple hidden (change)="seleccionarArchivo($event)" />
+      <!-- LAYOUT PRINCIPAL -->
+      <div class="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
+
+        <!-- IMPORTAR ARCHIVO -->
+        <div class="flex items-center w-full md:w-auto justify-center">
+
+          <label
+            class="cursor-pointer border rounded-lg p-6 md:p-8 text-center hover:bg-gray-100 transition
+                   w-full max-w-[260px] md:w-44"
+          >
+            <mat-icon class="text-4xl mb-3 text-gray-600">upload_file</mat-icon>
+
+            <div class="text-sm font-medium">
+              Importar los datos
+            </div>
+
+            <div class="text-xs text-gray-400 mt-1">
+              Máx. 2 archivos TXT
+            </div>
+
+            <input
+              type="file"
+              accept=".txt"
+              multiple
+              hidden
+              aria-label="Seleccionar archivos TXT para generar el reporte"
+              (change)="seleccionarArchivo($event)"
+            />
+
           </label>
+
         </div>
 
-        <!-- PREVIEW PANEL -->
-        <div class="flex-1 border rounded-lg p-8 flex flex-col items-center justify-center min-h-65">
+        <!-- PANEL DERECHO -->
+        <div class="w-full md:flex-1 border rounded-lg p-6 md:p-8 flex flex-col items-center justify-center min-h-[200px] md:min-h-65">
 
           <!-- LOADING -->
           @if (estado === 'loading') {
+
             <div class="flex flex-col items-center gap-4">
+
               <div class="flex gap-3">
                 <div class="w-3 h-3 bg-black rounded-full animate-bounce"></div>
                 <div class="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.2s]"></div>
                 <div class="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.4s]"></div>
               </div>
-              <div class="text-sm text-gray-500">Procesando archivos...</div>
+
+              <div class="text-sm text-gray-500">
+                Procesando archivos...
+              </div>
+
             </div>
+
           }
 
-          <!-- PREVIEW: lista de archivos seleccionados -->
+          <!-- PREVIEW ARCHIVOS -->
           @if (estado === 'preview') {
+
             <div class="w-full">
+
               <p class="text-sm font-semibold text-gray-600 mb-3">
-                {{ archivos.length }} archivo(s) seleccionado(s):
+                {{ archivos.length }} archivo(s) seleccionado(s)
               </p>
+
               <div class="flex flex-col gap-2">
+
                 @for (archivo of archivos; track archivo.name) {
+
                   <div class="bg-gray-100 rounded-lg px-4 py-3 flex items-center gap-3">
+
                     <mat-icon class="text-blue-500">description</mat-icon>
-                    <span class="text-sm text-gray-700 truncate">{{ archivo.name }}</span>
+
+                    <span class="text-sm text-gray-700 truncate">
+                      {{ archivo.name }}
+                    </span>
+
                     <span class="text-xs text-gray-400 ml-auto whitespace-nowrap">
                       {{ (archivo.size / 1024 / 1024 | number:'1.1-1') }} MB
                     </span>
+
                   </div>
+
                 }
+
               </div>
+
             </div>
+
           }
 
-          <!-- IDLE -->
+          <!-- ESTADO VACIO -->
           @if (estado === 'idle') {
-            <div class="text-gray-400 text-sm">
+
+            <div class="text-gray-400 text-sm text-center">
               Selecciona los archivos TXT para continuar
             </div>
+
           }
 
           <!-- BOTONES -->
-          <div class="flex gap-4 mt-8">
+          <div class="flex flex-col md:flex-row gap-3 md:gap-4 mt-8 w-full md:w-auto">
+
             <button
               (click)="cancelar()"
-              class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-400 transition"
+              class="w-full md:w-40 py-2.5 rounded-lg border border-gray-300 text-gray-600 font-medium
+                     hover:bg-gray-100 hover:border-gray-400 transition-all duration-200"
             >
               Cancelar
             </button>
@@ -89,18 +163,26 @@
             <button
               (click)="generarReporte()"
               [disabled]="estado !== 'preview'"
-              class="px-6 py-2 rounded-full text-white transition"
+              class="w-full md:w-40 py-2.5 rounded-lg font-medium text-white transition-all duration-200 flex items-center justify-center gap-2"
               [ngClass]="{
-                'bg-green-600 hover:bg-green-700': estado === 'preview',
-                'bg-green-300 cursor-not-allowed': estado !== 'preview'
+              'bg-gray-800 hover:bg-black shadow-sm': estado === 'preview',
+              'bg-gray-300 cursor-not-allowed': estado !== 'preview'
               }"
-            >
-              Generar reporte
+              >
+              @if (estado === 'loading') {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              }
+
+              <span>Generar reporte</span>
             </button>
+
           </div>
 
         </div>
+
       </div>
+
     </div>
   </div>
+
 </div>

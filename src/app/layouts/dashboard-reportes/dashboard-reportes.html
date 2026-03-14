@@ -2,10 +2,303 @@
 
 <!-- ══ MOBILE ═══════════════════════════════════════════════════ -->
 @if (isHandset$ | async) {
-<div class="flex-1 flex flex-col items-center justify-center gap-4 text-center text-slate-500 p-8">
-<mat-icon class="text-5xl w-12 h-12">desktop_windows</mat-icon>
-<p class="text-base">Este dashboard está optimizado para escritorio.</p>
-</div>
+  <div class="flex flex-col h-full w-full bg-slate-100 overflow-y-auto">
+
+    <!-- HEADER -->
+    <header class="h-14 bg-white border-b flex items-center justify-between px-4 shadow-sm sticky top-0 z-50">
+      <div class="flex items-center gap-2">
+        <button (click)="volver()" class="text-slate-500 hover:text-slate-900">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="font-bold text-blue-600 text-sm">
+          Dashboard Reportes
+        </span>
+      </div>
+    </header>
+
+    <!-- FILTROS -->
+    <div class="bg-white border-b p-3 flex flex-col gap-2 sticky top-14 z-40 shadow-sm">
+      <div class="flex gap-2">
+        <input type="date" [(ngModel)]="fechaInicio" class="flex-1 bg-slate-100 border rounded px-2 py-2 text-sm" />
+        <input type="date" [(ngModel)]="fechaFin" class="flex-1 bg-slate-100 border rounded px-2 py-2 text-sm" />
+      </div>
+      <div class="flex gap-2">
+        <button (click)="cargar()" class="flex-1 bg-blue-600 text-white py-2.5 rounded text-sm font-semibold">
+          Aplicar
+        </button>
+        <button (click)="limpiarFiltros()" class="px-4 py-2.5 border rounded text-sm text-slate-600">
+          Limpiar
+        </button>
+      </div>
+    </div>
+
+    <!-- AREAS LAB - Horizontal scroll (tabs) -->
+    <div class="bg-slate-50 border-b overflow-x-auto sticky top-[116px] z-30">
+      <div class="flex gap-2 px-3 py-3 min-w-max">
+        <!-- GLOBAL -->
+        <button (click)="seleccionarArea(null)" class="px-4 py-2 rounded-full text-xs font-bold uppercase border whitespace-nowrap" [ngClass]="!areaActiva ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200'">
+          GLOBAL <span class="ml-1 text-[10px] opacity-70">({{ fmt(totalSolicitados) }})</span>
+        </button>
+
+        <!-- AREAS DEL BACKEND -->
+        @for (a of areas; track $index) {
+          <button (click)="seleccionarArea(a.arealab)" class="px-4 py-2 rounded-full text-xs font-bold uppercase border whitespace-nowrap flex items-center gap-1" [ngClass]="areaActiva === a.arealab ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200'">
+            <mat-icon class="text-base">{{ iconArea(a.arealab) }}</mat-icon>
+            {{ a.arealab }}
+            <span class="text-[10px] opacity-70 ml-1">({{ a.total || 0 }})</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="p-3 flex flex-col gap-4 pb-8">
+
+      <!-- LOADING -->
+      @if (loading) {
+        <div class="flex flex-col items-center justify-center py-16 text-slate-500">
+          <div class="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+          <p class="text-sm mt-4 font-medium">Cargando métricas...</p>
+        </div>
+      }
+
+      <!-- CONTENIDO CARGADO -->
+      @if (!loading) {
+
+        <!-- VISTA GLOBAL MOBILE -->
+        @if (!areaActiva) {
+
+          <!-- LISTA DE ÁREAS COMO SELECTOR (NUEVO) -->
+          <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+            <div class="flex items-center gap-2 mb-3">
+              <mat-icon class="text-blue-600 text-lg">dashboard</mat-icon>
+              <span class="text-sm font-bold text-slate-700">Áreas de Laboratorio</span>
+            </div>
+            
+            <div class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+              <!-- GLOBAL primero -->
+              <div (click)="seleccionarArea(null)" class="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 cursor-pointer hover:shadow-md transition-all">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white">
+                    <mat-icon class="text-lg">dashboard</mat-icon>
+                  </div>
+                  <div>
+                    <span class="font-bold text-blue-700 text-sm">GLOBAL</span>
+                    <p class="text-xs text-slate-500">Vista general</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-lg font-bold text-blue-600">{{ fmt(totalSolicitados) }}</span>
+                </div>
+              </div>
+
+              <!-- Todas las áreas -->
+              @for (a of areas; track $index) {
+                <div (click)="seleccionarArea(a.arealab)" class="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 hover:border-blue-300 cursor-pointer hover:shadow-md transition-all">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
+                      <mat-icon class="text-lg">{{ iconArea(a.arealab) }}</mat-icon>
+                    </div>
+                    <div>
+                      <span class="font-medium text-slate-800 text-sm">{{ a.arealab }}</span>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-base font-bold text-slate-700">{{ fmt(a.total) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- KPIs principales en grid 2x2 -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-600">
+              <div class="text-xs text-slate-500 mb-1">Solicitados</div>
+              <div class="text-xl font-bold text-blue-600">{{ fmt(totalSolicitados) }}</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-green-600">
+              <div class="text-xs text-slate-500 mb-1">Con Resultado</div>
+              <div class="text-xl font-bold text-green-600">{{ fmt(totalConResultado) }}</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-amber-500">
+              <div class="text-xs text-slate-500 mb-1">Tasa</div>
+              <div class="text-xl font-bold text-amber-500">{{ tasaResultado }}%</div>
+            </div>
+            <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-purple-600">
+              <div class="text-xs text-slate-500 mb-1">Examen Top</div>
+              <div class="text-sm font-bold text-purple-600 line-clamp-2">{{ examenTop }}</div>
+            </div>
+          </div>
+
+          <!-- Gráficos básicos -->
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Cobertura de resultados</div>
+            <div echarts [options]="trazabilidadChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Distribución por sexo</div>
+            <div echarts [options]="sexoChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Tipo de seguro</div>
+            <div echarts [options]="seguroChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <!-- Top exámenes y doctores -->
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 Exámenes más solicitados</div>
+            <div echarts [options]="examenesChart" class="h-[220px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 Doctores que más solicitan</div>
+            <div echarts [options]="doctoresChart" class="h-[220px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 Diagnósticos CIE-10</div>
+            <div echarts [options]="cie10Chart" class="h-[220px] w-full"></div>
+          </div>
+
+          <!-- Análisis operativo -->
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Servicios con mayor demanda</div>
+            <div echarts [options]="serviciosChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Tendencia mensual</div>
+            <div echarts [options]="tendenciaChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Horas pico de atención</div>
+            <div echarts [options]="horasChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Distribución por edad</div>
+            <div echarts [options]="edadChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Demanda por día de la semana</div>
+            <div echarts [options]="diaSemanaChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 pacientes frecuentes</div>
+            <div echarts [options]="pacientesChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Volumen por sede</div>
+            <div echarts [options]="sedeChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Pareto de Diagnósticos</div>
+            <div echarts [options]="paretoCie10Chart" class="h-[220px] w-full"></div>
+          </div>
+        }
+
+        <!-- VISTA POR ÁREA MOBILE -->
+        @if (areaActiva) {
+          
+          <!-- Header del área con botón para volver a la lista -->
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border-l-4 border-blue-600">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <mat-icon class="text-3xl text-blue-600">{{ iconArea(areaActiva) }}</mat-icon>
+                <div>
+                  <h2 class="text-lg font-bold text-slate-900">{{ areaActiva }}</h2>
+                  <p class="text-xs text-slate-500">Vista detallada del área</p>
+                </div>
+              </div>
+              <button (click)="seleccionarArea(null)" class="text-xs bg-white px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-1">
+                <mat-icon class="text-sm">arrow_back</mat-icon> Volver
+              </button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mt-2">
+              <div>
+                <span class="text-xs text-slate-500">Solicitados</span>
+                <div class="text-lg font-bold text-blue-600">{{ fmt(areaSolicitados) }}</div>
+              </div>
+              <div>
+                <span class="text-xs text-slate-500">Con resultado</span>
+                <div class="text-lg font-bold text-green-600">{{ fmt(areaConResultado) }}</div>
+              </div>
+              <div>
+                <span class="text-xs text-slate-500">Tasa cobertura</span>
+                <div class="text-lg font-bold" [style.color]="areaTasa>=70 ? '#10B981' : areaTasa>=40 ? '#F59E0B' : '#EF4444'">
+                  {{ areaTasa }}%
+                </div>
+              </div>
+              <div>
+                <span class="text-xs text-slate-500">Examen top</span>
+                <div class="text-sm font-bold text-purple-600 line-clamp-2">{{ areaExamenTop }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráficos del área -->
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Gauge de cobertura</div>
+            <div echarts [options]="areaGaugeChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Normal vs Patológico</div>
+            <div echarts [options]="areaResultadoDonutChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Sexo de pacientes</div>
+            <div echarts [options]="areaSexoChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Tendencia mensual</div>
+            <div echarts [options]="areaTendenciaChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Top exámenes del área</div>
+            <div echarts [options]="areaTopExamenesChart" class="h-[220px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Top CIE-10 del área</div>
+            <div echarts [options]="areaCIE10Chart" class="h-[220px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Doctores que más solicitan</div>
+            <div echarts [options]="areaDoctorChart" class="h-[220px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Demanda por día de la semana</div>
+            <div echarts [options]="areaDiaSemanaChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Top pacientes frecuentes</div>
+            <div echarts [options]="areaPacientesChart" class="h-[200px] w-full"></div>
+          </div>
+
+          <div class="bg-white rounded-xl p-3 shadow-sm">
+            <div class="text-xs font-semibold text-slate-500 mb-2">Perfil de demanda semanal</div>
+            <div echarts [options]="areaRadarSemanalChart" class="h-[200px] w-full"></div>
+          </div>
+        }
+      }
+    </div>
+  </div>
 }
 
 <!-- ══ DESKTOP ══════════════════════════════════════════════════ -->
