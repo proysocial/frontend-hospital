@@ -65,10 +65,42 @@
       <!-- CONTENIDO CARGADO -->
       @if (!loading) {
 
+        <!-- MODAL DE DRILL-DOWN (MOBILE) -->
+        @if (drillDownContext) {
+          <div class="fixed inset-0 bg-black/50 z-[100] flex items-end">
+            <div class="bg-white w-full rounded-t-2xl max-h-[80vh] flex flex-col">
+              <div class="p-4 border-b flex justify-between items-center sticky top-0 bg-white">
+                <h3 class="font-bold text-sm truncate max-w-[80%]">{{ drillDownContext.titulo }}</h3>
+                <button (click)="cerrarDrillDown()" class="p-2">
+                  <mat-icon>close</mat-icon>
+                </button>
+              </div>
+              <div class="p-3 overflow-y-auto">
+                <div echarts [options]="drillDownChart" class="h-[350px] w-full"></div>
+                
+                <!-- Tabla de datos si es necesario -->
+                @if (drillDownContext.datos && drillDownContext.datos.length > 0) {
+                  <div class="mt-4 border-t pt-3">
+                    <p class="text-xs font-semibold text-slate-500 mb-2">Detalle:</p>
+                    <div class="space-y-2 max-h-[200px] overflow-y-auto">
+                      @for (item of drillDownContext.datos.slice(0, 10); track $index) {
+                        <div class="flex justify-between items-center p-2 bg-slate-50 rounded">
+                          <span class="text-xs">{{ item.profesional || item.desc_examen || item.paciente || item.estado || item.rango || item.area || item.servicio || 'Item' }}</span>
+                          <span class="text-xs font-bold">{{ item.total }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
         <!-- VISTA GLOBAL MOBILE -->
         @if (!areaActiva) {
 
-          <!-- LISTA DE ÁREAS COMO SELECTOR (NUEVO) -->
+          <!-- LISTA DE ÁREAS COMO SELECTOR -->
           <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
             <div class="flex items-center gap-2 mb-3">
               <mat-icon class="text-blue-600 text-lg">dashboard</mat-icon>
@@ -131,42 +163,65 @@
             </div>
           </div>
 
-          <!-- Gráficos básicos -->
+          <!-- Gráficos con (chartClick) CORREGIDO -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Cobertura de resultados</div>
-            <div echarts [options]="trazabilidadChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Cobertura de resultados</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para detalles</span>
+            </div>
+            <div echarts [options]="trazabilidadChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'trazabilidad')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Distribución por sexo</div>
-            <div echarts [options]="sexoChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Distribución por sexo</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para detalles</span>
+            </div>
+            <div echarts [options]="sexoChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'sexo')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Tipo de seguro</div>
-            <div echarts [options]="seguroChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Tipo de seguro</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para detalles</span>
+            </div>
+            <div echarts [options]="seguroChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'seguro')"></div>
           </div>
 
-          <!-- Top exámenes y doctores -->
+          <!-- Top exámenes con (chartClick) -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 Exámenes más solicitados</div>
-            <div echarts [options]="examenesChart" class="h-[220px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Top 5 Exámenes más solicitados</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver doctores</span>
+            </div>
+            <div echarts [options]="examenesChart" class="h-[220px] w-full" (chartClick)="onChartClick($event, 'examen')"></div>
           </div>
 
+          <!-- Top doctores con (chartClick) -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 Doctores que más solicitan</div>
-            <div echarts [options]="doctoresChart" class="h-[220px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Top 5 Doctores que más solicitan</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver exámenes</span>
+            </div>
+            <div echarts [options]="doctoresChart" class="h-[220px] w-full" (chartClick)="onChartClick($event, 'doctor')"></div>
           </div>
 
+          <!-- Top diagnósticos con (chartClick) -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 Diagnósticos CIE-10</div>
-            <div echarts [options]="cie10Chart" class="h-[220px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Top 5 Diagnósticos CIE-10</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver pacientes</span>
+            </div>
+            <div echarts [options]="cie10Chart" class="h-[220px] w-full" (chartClick)="onChartClick($event, 'diagnostico')"></div>
           </div>
 
-          <!-- Análisis operativo -->
+          <!-- Servicios con mayor demanda con (chartClick) -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Servicios con mayor demanda</div>
-            <div echarts [options]="serviciosChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Servicios con mayor demanda</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para filtrar</span>
+            </div>
+            <div echarts [options]="serviciosChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'servicio')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
@@ -189,14 +244,22 @@
             <div echarts [options]="diaSemanaChart" class="h-[200px] w-full"></div>
           </div>
 
+          <!-- Top pacientes con (chartClick) -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Top 5 pacientes frecuentes</div>
-            <div echarts [options]="pacientesChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Top 5 pacientes frecuentes</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para detalles</span>
+            </div>
+            <div echarts [options]="pacientesChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'paciente')"></div>
           </div>
 
+          <!-- Volumen por sede con (chartClick) -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Volumen por sede</div>
-            <div echarts [options]="sedeChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Volumen por sede</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para detalles</span>
+            </div>
+            <div echarts [options]="sedeChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'sede')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
@@ -245,15 +308,18 @@
             </div>
           </div>
 
-          <!-- Gráficos del área -->
+          <!-- Gráficos del área con (chartClick) -->
           <div class="bg-white rounded-xl p-3 shadow-sm">
             <div class="text-xs font-semibold text-slate-500 mb-2">Gauge de cobertura</div>
             <div echarts [options]="areaGaugeChart" class="h-[200px] w-full"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Normal vs Patológico</div>
-            <div echarts [options]="areaResultadoDonutChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Normal vs Patológico</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para detalles</span>
+            </div>
+            <div echarts [options]="areaResultadoDonutChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'resultado')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
@@ -267,18 +333,27 @@
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Top exámenes del área</div>
-            <div echarts [options]="areaTopExamenesChart" class="h-[220px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Top exámenes del área</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver doctores</span>
+            </div>
+            <div echarts [options]="areaTopExamenesChart" class="h-[220px] w-full" (chartClick)="onChartClick($event, 'examen')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Top CIE-10 del área</div>
-            <div echarts [options]="areaCIE10Chart" class="h-[220px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Top CIE-10 del área</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver pacientes</span>
+            </div>
+            <div echarts [options]="areaCIE10Chart" class="h-[220px] w-full" (chartClick)="onChartClick($event, 'diagnostico')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Doctores que más solicitan</div>
-            <div echarts [options]="areaDoctorChart" class="h-[220px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Doctores que más solicitan</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver exámenes</span>
+            </div>
+            <div echarts [options]="areaDoctorChart" class="h-[220px] w-full" (chartClick)="onChartClick($event, 'doctor')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
@@ -287,8 +362,11 @@
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
-            <div class="text-xs font-semibold text-slate-500 mb-2">Top pacientes frecuentes</div>
-            <div echarts [options]="areaPacientesChart" class="h-[200px] w-full"></div>
+            <div class="text-xs font-semibold text-slate-500 mb-2 flex justify-between items-center">
+              <span>Top pacientes frecuentes</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para detalles</span>
+            </div>
+            <div echarts [options]="areaPacientesChart" class="h-[200px] w-full" (chartClick)="onChartClick($event, 'paciente')"></div>
           </div>
 
           <div class="bg-white rounded-xl p-3 shadow-sm">
@@ -318,7 +396,6 @@
     </div>
   </div>
 
-
   <!-- Filtros de fecha en topbar -->
   <div class="flex-1 flex items-center justify-center gap-2">
     <div class="flex items-center gap-1">
@@ -340,7 +417,6 @@
     }
   </div>
 
-
   <div class="shrink-0">
     @if (areaActiva) {
       <span class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 border border-blue-100 shadow-sm">
@@ -350,7 +426,6 @@
     }
   </div>
 </header>
-
 
 <!-- ─ ÁREA TABS ──────────────────────────────────────────────── -->
 <nav class="shrink-0 bg-slate-50/80 backdrop-blur-md border-x border-b border-slate-200 rounded-b-2xl z-40 relative shadow-inner max-h-[145px] overflow-y-auto py-4 px-6 flex flex-wrap gap-2.5 justify-center scroll-smooth [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
@@ -364,7 +439,6 @@
       {{ fmt(totalSolicitados) }}
     </span>
   </button>
-
 
   @for (a of areas; track a.arealab) {
     <button class="flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer text-[12px] font-bold uppercase tracking-wide transition-all select-none shadow-sm hover:-translate-y-0.5 border"
@@ -380,11 +454,54 @@
   }
 </nav>
 
+<!-- MODAL DE DRILL-DOWN DESKTOP -->
+@if (drillDownContext) {
+  <div class="fixed inset-0 bg-black/50 z-[1000] flex items-center justify-center">
+    <div class="bg-white rounded-2xl w-[80%] max-w-[1000px] max-h-[80vh] flex flex-col shadow-2xl">
+      <div class="p-5 border-b flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-2xl">
+        <div>
+          <h3 class="font-bold text-lg text-slate-800">{{ drillDownContext.titulo }}</h3>
+          <p class="text-xs text-slate-500 mt-1">Información detallada</p>
+        </div>
+        <button (click)="cerrarDrillDown()" class="p-2 hover:bg-white/50 rounded-full transition-colors">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto">
+        <div echarts [options]="drillDownChart" class="h-[400px] w-full"></div>
+        
+        <!-- Tabla de datos detallados -->
+        @if (drillDownContext.datos && drillDownContext.datos.length > 0) {
+          <div class="mt-6 border-t pt-4">
+            <p class="text-sm font-semibold text-slate-700 mb-3">Detalle de solicitudes:</p>
+            <div class="max-h-[200px] overflow-y-auto border rounded-lg">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 sticky top-0">
+                  <tr>
+                    <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Item</th>
+                    <th class="px-4 py-2 text-right text-xs font-semibold text-slate-600">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of drillDownContext.datos.slice(0, 15); track $index) {
+                    <tr class="border-t hover:bg-slate-50">
+                      <td class="px-4 py-2 text-xs">{{ item.profesional || item.desc_examen || item.paciente || item.estado || item.rango || item.area || item.servicio || 'Item' }}</td>
+                      <td class="px-4 py-2 text-xs text-right font-bold">{{ item.total }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ─ MAIN ───────────────────────────────────────────────────── -->
 <main class="flex-1 overflow-y-auto w-full relative z-10 [mask-image:linear-gradient(to_bottom,transparent_0,black_20px)]">
   <div class="px-6 pt-8 pb-10 max-w-[1600px] mx-auto">
-
 
     @if (loading) {
       <div class="flex flex-col items-center justify-center h-full min-h-[400px] gap-4 text-slate-500">
@@ -393,17 +510,13 @@
       </div>
     }
 
-
     @if (!loading) {
-
 
       <!-- ══ VISTA GLOBAL ════════════════════════════════════════ -->
       @if (!areaActiva) {
 
-
         <h2 class="mt-4 font-extrabold text-slate-900 text-2xl tracking-tight mb-1">📊 Dashboard Gerencial</h2>
         <p class="text-slate-500 text-sm mb-5">Resumen de actividad del servicio de imágenes médicas</p>
-
 
         <!-- KPI STRIP -->
         <div class="flex flex-wrap gap-3 mb-4">
@@ -433,26 +546,33 @@
           </div>
         </div>
 
-
         <!-- ── Sección: KPIs visuales ─────────────────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
           <mat-icon class="text-base w-4 h-4">route</mat-icon> Trazabilidad y Distribución Global
         </div>
         <div class="flex flex-wrap gap-3 mb-3">
           <div class="flex-1 min-w-[200px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">📡 Cobertura de Resultados</div>
-            <div echarts [options]="trazabilidadChart" class="h-[280px] min-h-[240px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>📡 Cobertura de Resultados</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="trazabilidadChart" class="h-[280px] min-h-[240px] w-full" (chartClick)="onChartClick($event, 'trazabilidad')"></div>
           </div>
           <div class="flex-1 min-w-[200px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👥 Distribución por Sexo</div>
-            <div echarts [options]="sexoChart" class="h-[280px] min-h-[240px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>👥 Distribución por Sexo</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="sexoChart" class="h-[280px] min-h-[240px] w-full" (chartClick)="onChartClick($event, 'sexo')"></div>
           </div>
           <div class="flex-1 min-w-[200px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🛡️ Tipo de Seguro</div>
-            <div echarts [options]="seguroChart" class="h-[280px] min-h-[240px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>🛡️ Tipo de Seguro</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="seguroChart" class="h-[280px] min-h-[240px] w-full" (chartClick)="onChartClick($event, 'seguro')"></div>
           </div>
         </div>
-
 
         <!-- ── Sección: Top exámenes & doctores ──────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
@@ -460,27 +580,34 @@
         </div>
         <div class="flex flex-wrap gap-3 mb-3">
           <div class="flex-[2] min-w-[360px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">📋 Top 10 Exámenes más Solicitados</div>
-            <div echarts [options]="examenesChart" class="h-[320px] min-h-[280px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>📋 Top 10 Exámenes más Solicitados</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver doctores</span>
+            </div>
+            <div echarts [options]="examenesChart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'examen')"></div>
           </div>
           <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👨‍⚕️ Top Doctores que más Solicitan</div>
-            <div echarts [options]="doctoresChart" class="h-[320px] min-h-[280px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>👨‍⚕️ Top Doctores que más Solicitan</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver exámenes</span>
+            </div>
+            <div echarts [options]="doctoresChart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'doctor')"></div>
           </div>
         </div>
-
 
         <!-- ── Sección: Diagnósticos CIE-10 ─────────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
-          <mat-icon class="text-base w-4 h-4">medical_information</mat-icon> Diagnósticos CIE-10 más Frecuentes (resultados)
+          <mat-icon class="text-base w-4 h-4">medical_information</mat-icon> Diagnósticos CIE-10 más Frecuentes
         </div>
         <div class="flex flex-wrap gap-3 mb-3">
           <div class="flex-1 w-full bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏥 Top Diagnósticos CIE-10</div>
-            <div echarts [options]="cie10Chart" class="h-[320px] min-h-[280px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>🏥 Top Diagnósticos CIE-10</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver pacientes</span>
+            </div>
+            <div echarts [options]="cie10Chart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'diagnostico')"></div>
           </div>
         </div>
-
 
         <!-- ── Sección: Demanda operativa ───────────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
@@ -488,8 +615,11 @@
         </div>
         <div class="flex flex-wrap gap-3 mb-3">
           <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏢 Servicios con Mayor Demanda</div>
-            <div echarts [options]="serviciosChart" class="h-[300px] min-h-[260px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>🏢 Servicios con Mayor Demanda</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para filtrar</span>
+            </div>
+            <div echarts [options]="serviciosChart" class="h-[300px] min-h-[260px] w-full" (chartClick)="onChartClick($event, 'servicio')"></div>
           </div>
           <div class="flex-1 min-w-[200px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
             <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">📈 Tendencia Mensual</div>
@@ -501,7 +631,6 @@
           </div>
         </div>
 
-
         <!-- ── Sección: Perfil de pacientes ─────────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
           <mat-icon class="text-base w-4 h-4">people</mat-icon> Perfil de Pacientes
@@ -512,8 +641,11 @@
             <div echarts [options]="edadChart" class="h-[280px] min-h-[240px] w-full"></div>
           </div>
           <div class="flex-1 min-w-[200px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏗️ Exámenes por Sede</div>
-            <div echarts [options]="sedeChart" class="h-[280px] min-h-[240px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>🏗️ Exámenes por Sede</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="sedeChart" class="h-[280px] min-h-[240px] w-full" (chartClick)="onChartClick($event, 'sede')"></div>
           </div>
         </div>
 
@@ -527,12 +659,18 @@
             <div echarts [options]="diaSemanaChart" class="h-[280px] min-h-[240px] w-full"></div>
           </div>
           <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👤 Top 10 Pacientes Frecuentes</div>
-            <div echarts [options]="pacientesChart" class="h-[280px] min-h-[240px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>👤 Top 10 Pacientes Frecuentes</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="pacientesChart" class="h-[280px] min-h-[240px] w-full" (chartClick)="onChartClick($event, 'paciente')"></div>
           </div>
           <div class="flex-1 min-w-[300px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏥 Volumen por Sede de Atención</div>
-            <div echarts [options]="sedeChart" class="h-[280px] min-h-[240px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>🏥 Volumen por Sede de Atención</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="sedeChart" class="h-[280px] min-h-[240px] w-full" (chartClick)="onChartClick($event, 'sede')"></div>
           </div>
         </div>
 
@@ -547,20 +685,24 @@
         </div>
 
         <div class="flex-1 min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col mt-4">
-          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">💳 Dependencia de Seguros</div>
-          <div echarts [options]="segurosRoseChart" class="h-[320px] min-h-[280px] w-full"></div>
+          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+            <span>💳 Dependencia de Seguros</span>
+            <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+          </div>
+          <div echarts [options]="segurosRoseChart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'seguro')"></div>
         </div>
 
         <div class="flex-1 min-w-[360px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col mt-4">
-          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏢 Carga Operativa por Sede</div>
-          <div echarts [options]="sedesTreemapChart" class="h-[320px] min-h-[280px] w-full"></div>
+          <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+            <span>🏢 Carga Operativa por Sede</span>
+            <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+          </div>
+          <div echarts [options]="sedesTreemapChart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'sede')"></div>
         </div>
       }
 
-
       <!-- ══ VISTA POR ÁREA ══════════════════════════════════════ -->
       @if (areaActiva && datosArea) {
-
 
         <!-- Banner del área -->
         <div class="bg-gradient-to-br from-[#e8f0fb] to-[#f0f9f6] border border-blue-600/15 border-l-4 border-l-blue-600 rounded-xl p-5 mb-6 flex items-center gap-5 flex-wrap shadow-sm">
@@ -591,7 +733,6 @@
           </div>
         </div>
 
-
         <!-- ── Sección: Trazabilidad del área ───────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
           <mat-icon class="text-base w-4 h-4 text-blue-500">route</mat-icon> Trazabilidad del Área
@@ -603,8 +744,11 @@
             <div echarts [options]="areaGaugeChart" class="h-[260px] min-h-[220px] w-full"></div>
           </div>
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🔬 Normal vs Patológico</div>
-            <div echarts [options]="areaResultadoDonutChart" class="h-[260px] min-h-[220px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>🔬 Normal vs Patológico</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="areaResultadoDonutChart" class="h-[260px] min-h-[220px] w-full" (chartClick)="onChartClick($event, 'resultado')"></div>
           </div>
           <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
             <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👥 Sexo de Pacientes</div>
@@ -615,7 +759,6 @@
             <div echarts [options]="areaTendenciaChart" class="h-[260px] min-h-[220px] w-full"></div>
           </div>
         </div>
-
 
         <!-- ── Sección: Examen → resultado (trazabilidad profunda) -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
@@ -629,15 +772,17 @@
           </div>
         </div>
 
-
         <!-- ── Sección: Top exámenes y servicios ────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
           <mat-icon class="text-base w-4 h-4">bar_chart</mat-icon> Top Exámenes y Servicios del Área
         </div>
         <div class="flex flex-wrap gap-3 mb-3">
           <div class="flex-[2] min-w-[360px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">📋 Top Exámenes del Área</div>
-            <div echarts [options]="areaTopExamenesChart" class="h-[320px] min-h-[280px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>📋 Top Exámenes del Área</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver doctores</span>
+            </div>
+            <div echarts [options]="areaTopExamenesChart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'examen')"></div>
           </div>
           <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
             <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏥 Áreas de Lab que Atienden al Servicio</div>
@@ -645,19 +790,24 @@
           </div>
         </div>
 
-
         <!-- ── Sección: Diagnósticos y doctores ─────────────────── -->
         <div class="flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider text-slate-500 mt-8 mb-3 after:content-[''] after:flex-1 after:h-[1px] after:bg-slate-200 after:ml-2">
           <mat-icon class="text-base w-4 h-4">medical_information</mat-icon> Diagnósticos y Doctores del Área
         </div>
         <div class="flex flex-wrap gap-3 mb-3">
           <div class="flex-[2] min-w-[360px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">🏥 Top CIE-10 del Área</div>
-            <div echarts [options]="areaCIE10Chart" class="h-[320px] min-h-[280px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>🏥 Top CIE-10 del Área</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver pacientes</span>
+            </div>
+            <div echarts [options]="areaCIE10Chart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'diagnostico')"></div>
           </div>
           <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👨‍⚕️ Doctores que más Solicitan al Área</div>
-            <div echarts [options]="areaDoctorChart" class="h-[320px] min-h-[280px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>👨‍⚕️ Doctores que más Solicitan al Área</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic para ver exámenes</span>
+            </div>
+            <div echarts [options]="areaDoctorChart" class="h-[320px] min-h-[280px] w-full" (chartClick)="onChartClick($event, 'doctor')"></div>
           </div>
         </div>
 
@@ -671,8 +821,11 @@
             <div echarts [options]="areaDiaSemanaChart" class="h-[280px] min-h-[240px] w-full"></div>
           </div>
           <div class="flex-[1.5] min-w-[280px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">👤 Top 10 Pacientes Frecuentes</div>
-            <div echarts [options]="areaPacientesChart" class="h-[280px] min-h-[240px] w-full"></div>
+            <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100 flex justify-between items-center">
+              <span>👤 Top 10 Pacientes Frecuentes</span>
+              <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">clic</span>
+            </div>
+            <div echarts [options]="areaPacientesChart" class="h-[280px] min-h-[240px] w-full" (chartClick)="onChartClick($event, 'paciente')"></div>
           </div>
           <div class="flex-1 min-w-[300px] bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
             <div class="text-[12px] font-bold uppercase tracking-wide text-slate-500 mb-2.5 pb-2 border-b border-slate-100">⚙️ Servicios dentro del Área</div>
