@@ -1,5 +1,24 @@
 <div class="min-h-screen flex flex-col bg-gray-100 h-full gap-5">
 
+  <!-- HEADER con título y exportar -->
+  <div class="flex items-center justify-between px-4 pt-4" [class.!px-0]="!(isHandset$ | async)">
+    <h2 class="text-lg font-bold text-gray-800">{{ tituloVista }}</h2>
+    <div class="flex items-center gap-2">
+      <button (click)="exportarPagina()"
+        class="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 bg-white border border-gray-300 hover:border-gray-400 px-3 py-1.5 rounded-md transition shadow-sm">
+        <mat-icon class="text-sm w-3.5 h-3.5">print</mat-icon>
+        Imprimir
+      </button>
+      <button (click)="exportarPDF()"
+        class="flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-800 bg-white border border-red-200 hover:border-red-400 px-3 py-1.5 rounded-md transition shadow-sm">
+        <mat-icon class="text-sm w-3.5 h-3.5">picture_as_pdf</mat-icon>
+        PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="reportes-exportable">
+
   <!-- MOBILE -->
   @if (isHandset$ | async) {
     <div class="flex flex-col h-full gap-4 px-4">
@@ -7,21 +26,20 @@
     <!-- Barra para buscar -->
     <div class="bg-white rounded-full px-4 py-2 shadow-sm flex items-center gap-2 border border-gray-100">
         <mat-icon class="text-gray-400">search</mat-icon>
-        <input 
-            type="text" 
+        <input
+            type="text"
             [(ngModel)]="busqueda"
             (ngModelChange)="filtrarReportesPorNombre()"
-            placeholder="Buscar reporte" 
+            placeholder="Buscar reporte"
             class="w-full bg-transparent outline-none text-gray-700 placeholder-gray-400 text-base font-medium"
         >
     </div>
 
     <!-- Barra tipo de vista y filtros -->
     <div class="flex justify-between items-center">
-        
-        <!-- Botones para cambiar el modo de vista Lista o Grid -->
+
         <div class="flex items-center gap-1 bg-white rounded-md border border-gray-300 p-1">
-            <button 
+            <button
                 (click)="cambiarVista('list')"
                 class="p-1.5 rounded transition flex items-center justify-center"
                 [class.bg-gray-200]="vistaActual === 'list'"
@@ -30,7 +48,7 @@
             >
                 <mat-icon class="scale-90">view_list</mat-icon>
             </button>
-            <button 
+            <button
                 (click)="cambiarVista('grid')"
                 class="p-1.5 rounded transition flex items-center justify-center"
                 [class.bg-gray-200]="vistaActual === 'grid'"
@@ -41,19 +59,65 @@
             </button>
         </div>
 
-        <!-- Botón de Filtro -->
-        <button 
-            (click)="abrirFiltros()"
-            class="flex items-center gap-2 bg-white border border-gray-300 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-50 transition shadow-sm"
+        <button
+            (click)="toggleFiltros()"
+            class="flex items-center gap-2 border border-gray-300 px-3 py-1.5 rounded-md text-sm font-medium transition shadow-sm"
+            [class.bg-blue-600]="mostrarFiltros"
+            [class.text-white]="mostrarFiltros"
+            [class.bg-white]="!mostrarFiltros"
+            [class.text-gray-600]="!mostrarFiltros"
         >
-            <span class="text-sm font-medium">Filtro</span>
-            <mat-icon class="text-sm overflow-visible flex items-center h-full">expand_more</mat-icon>
+            <mat-icon class="text-sm overflow-visible flex items-center h-full">tune</mat-icon>
+            Filtros
+            @if (hayFiltrosActivos) {
+              <span class="w-2 h-2 rounded-full bg-blue-500 inline-block" [class.bg-white]="mostrarFiltros"></span>
+            }
         </button>
     </div>
 
+    @if (mostrarFiltros) {
+      <div class="bg-white rounded-xl border border-gray-200 shadow-md p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-bold text-gray-700 flex items-center gap-1">
+            <mat-icon class="text-base text-blue-600">tune</mat-icon> Filtros avanzados
+          </span>
+          @if (hayFiltrosActivos) {
+            <button (click)="limpiarFiltros()" class="text-xs text-red-500 hover:underline flex items-center gap-1">
+              <mat-icon class="text-sm">close</mat-icon> Limpiar
+            </button>
+          }
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Fecha creación desde</label>
+          <input type="date" [(ngModel)]="filtroFechaDesde" (ngModelChange)="aplicarFiltros()"
+            class="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Fecha creación hasta</label>
+          <input type="date" [(ngModel)]="filtroFechaHasta" (ngModelChange)="aplicarFiltros()"
+            class="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Creado por</label>
+          <input type="text" [(ngModel)]="filtroCreadoPor" (ngModelChange)="aplicarFiltros()" placeholder="Ej: Admin"
+            class="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1">Ordenar por</label>
+          <select [(ngModel)]="ordenActual" (ngModelChange)="aplicarFiltros()"
+            class="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition bg-white">
+            <option value="fecha_desc">Más reciente primero</option>
+            <option value="fecha_asc">Más antiguo primero</option>
+            <option value="nombre">Nombre (A-Z)</option>
+          </select>
+        </div>
+        <p class="text-xs text-gray-400 text-right">{{ reportes.length }} resultado(s)</p>
+      </div>
+    }
+
     <div class="flex-1 overflow-auto pb-20">
-        
-        <!-- Vista en modo lista -->
+
         @if (vistaActual === 'list') {
             <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-x-auto">
                 <table class="w-full text-left border-collapse min-w-[600px]">
@@ -64,11 +128,12 @@
                             <th class="py-3 px-4 text-xs font-semibold text-gray-900 whitespace-nowrap">Periodo</th>
                             <th class="py-3 px-4 text-xs font-semibold text-gray-900 whitespace-nowrap">Actualizado</th>
                             <th class="py-3 px-4 text-xs font-semibold text-gray-900 whitespace-nowrap">Descripción</th>
+                            <th class="py-3 px-4 text-xs font-semibold text-gray-900 whitespace-nowrap text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @for (reporte of reportes; track reporte.id) {
-                            <tr class="hover:bg-gray-50 transition">
+                            <tr class="hover:bg-blue-50 transition cursor-pointer" (click)="verReporte(reporte.id)">
                                 <td class="py-3 px-4 text-xs text-gray-600 font-medium whitespace-nowrap">
                                     {{ reporte.nombre }}
                                 </td>
@@ -84,20 +149,64 @@
                                 <td class="py-3 px-4 text-xs text-gray-400 max-w-[150px] truncate">
                                     {{ reporte.descripcion }}
                                 </td>
+                                <td class="py-3 px-4 text-center">
+                                  <div class="flex items-center justify-center gap-1">
+                                    <button
+                                      class="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-1 rounded transition-colors flex items-center justify-center"
+                                      (click)="verReporte(reporte.id); $event.stopPropagation()"
+                                      title="Ver dashboard"
+                                      [disabled]="cargandoReporte === reporte.id"
+                                    >
+                                      @if (cargandoReporte === reporte.id) {
+                                        <span class="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                      } @else {
+                                        <mat-icon class="scale-75 w-4 h-4">dashboard</mat-icon>
+                                      }
+                                    </button>
+                                    @if (!esPublico) {
+                                    <button
+                                      class="p-1 rounded transition-colors flex items-center justify-center"
+                                      [class.text-blue-600]="reporte.publicado"
+                                      [class.text-gray-400]="!reporte.publicado"
+                                      [class.hover:text-blue-800]="reporte.publicado"
+                                      [class.hover:text-gray-600]="!reporte.publicado"
+                                      [class.hover:bg-blue-50]="reporte.publicado"
+                                      [class.hover:bg-gray-100]="!reporte.publicado"
+                                      (click)="togglePublicar(reporte.id, $event)"
+                                      [title]="reporte.publicado ? 'Despublicar' : 'Publicar'"
+                                    >
+                                      @if (cargandoPublicacion === reporte.id) {
+                                        <span class="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                      } @else {
+                                        <mat-icon class="scale-75 w-4 h-4">{{ reporte.publicado ? 'public' : 'public_off' }}</mat-icon>
+                                      }
+                                    </button>
+                                    <button class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors" (click)="eliminarReporte(reporte.id, $event)">
+                                        <mat-icon class="scale-75 w-4 h-4">delete</mat-icon>
+                                    </button>
+                                    }
+                                  </div>
+                                </td>
                             </tr>
+                        }
+                        @if (reportes.length === 0) {
+                          <tr>
+                            <td colspan="7" class="py-8 text-center text-xs text-gray-400">
+                              <mat-icon class="text-gray-300 text-3xl block mx-auto mb-2">inbox</mat-icon>
+                              No se encontraron reportes
+                            </td>
+                          </tr>
                         }
                     </tbody>
                 </table>
             </div>
         }
 
-        <!-- Vista en modo Grid -->
         @if (vistaActual === 'grid') {
             <div class="grid grid-cols-1 gap-4">
                 @for (reporte of reportes; track reporte.id) {
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between h-48 active:scale-[0.99] transition duration-200">
-                        
-                        <!-- Header -->
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between h-48 active:scale-[0.99] transition duration-200 cursor-pointer hover:border-blue-300" (click)="verReporte(reporte.id)">
+
                         <div>
                             <h3 class="text-base font-bold text-gray-900 leading-tight mb-1">
                                 {{ reporte.nombre }}
@@ -110,16 +219,59 @@
                             </p>
                         </div>
 
-                        <!-- Footer -->
                         <div class="flex items-end justify-between mt-2 pt-2 border-t border-gray-50">
-                            <span class="text-xs font-semibold text-gray-700">
-                                {{ reporte.creadoPor }}
-                            </span>
-                            <span class="text-xs text-gray-500">
-                                {{ reporte.actualizado }}
-                            </span>
+                            <div>
+                                <span class="text-xs font-semibold text-gray-700 block">
+                                    {{ reporte.creadoPor }}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    {{ reporte.actualizado }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                              <button
+                                class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded transition-colors flex items-center justify-center"
+                                (click)="verReporte(reporte.id); $event.stopPropagation()"
+                                title="Ver dashboard"
+                                [disabled]="cargandoReporte === reporte.id"
+                              >
+                                @if (cargandoReporte === reporte.id) {
+                                  <span class="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                } @else {
+                                  <mat-icon class="text-base w-4 h-4">dashboard</mat-icon>
+                                }
+                              </button>
+                              @if (!esPublico) {
+                              <button
+                                class="p-1.5 rounded transition-colors"
+                                [class.text-blue-600]="reporte.publicado"
+                                [class.text-gray-400]="!reporte.publicado"
+                                [class.hover:text-blue-800]="reporte.publicado"
+                                [class.hover:text-gray-600]="!reporte.publicado"
+                                [class.hover:bg-blue-50]="reporte.publicado"
+                                [class.hover:bg-gray-100]="!reporte.publicado"
+                                (click)="togglePublicar(reporte.id, $event)"
+                                [title]="reporte.publicado ? 'Despublicar' : 'Publicar'"
+                              >
+                                @if (cargandoPublicacion === reporte.id) {
+                                  <span class="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                } @else {
+                                  <mat-icon class="text-base w-4 h-4">{{ reporte.publicado ? 'public' : 'public_off' }}</mat-icon>
+                                }
+                              </button>
+                              <button class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded transition-colors" (click)="eliminarReporte(reporte.id, $event)">
+                                  <mat-icon class="text-base w-4 h-4">delete</mat-icon>
+                              </button>
+                              }
+                            </div>
                         </div>
                     </div>
+                }
+                @if (reportes.length === 0) {
+                  <div class="bg-white rounded-2xl p-8 text-center text-gray-400">
+                    <mat-icon class="text-gray-300 text-4xl block mx-auto mb-2">inbox</mat-icon>
+                    <p class="text-sm">No se encontraron reportes</p>
+                  </div>
                 }
             </div>
         }
@@ -129,24 +281,21 @@
 
   <!-- DESKTOP -->
   @if (isDesktop$ | async) {
-    <!-- Barra para buscar -->
     <div class="bg-white rounded-full px-6 py-3 shadow-sm flex items-center gap-3 border border-gray-100">
         <mat-icon class="text-gray-400">search</mat-icon>
-        <input 
-            type="text" 
+        <input
+            type="text"
             [(ngModel)]="busqueda"
             (ngModelChange)="filtrarReportesPorNombre()"
-            placeholder="Escribe el nombre del reporte" 
+            placeholder="Escribe el nombre del reporte"
             class="w-full bg-transparent outline-none text-gray-700 placeholder-gray-400 text-lg font-medium"
         >
     </div>
 
-    <!-- Barra tipo de vista y filtros -->
     <div class="flex justify-between items-center px-1">
-        
-        <!-- Botones para cambiar el modo de vista Lista o Grid -->
+
         <div class="flex items-center gap-2 bg-white rounded-md border border-gray-300 p-1">
-            <button 
+            <button
                 (click)="cambiarVista('list')"
                 class="p-1 rounded transition flex items-center justify-center"
                 [class.bg-gray-200]="vistaActual === 'list'"
@@ -155,7 +304,7 @@
             >
                 <mat-icon>view_list</mat-icon>
             </button>
-            <button 
+            <button
                 (click)="cambiarVista('grid')"
                 class="p-1 rounded transition flex items-center justify-center"
                 [class.bg-gray-200]="vistaActual === 'grid'"
@@ -166,19 +315,72 @@
             </button>
         </div>
 
-        <!-- Botón de Filtro -->
-        <button 
-            (click)="abrirFiltros()"
-            class="flex items-center gap-2 bg-white border border-gray-300 px-4 py-2 rounded-md text-gray-600 hover:bg-gray-50 transition shadow-sm"
-        >
-            <span class="text-sm font-medium">Filtro</span>
-            <mat-icon class="text-sm overflow-visible flex items-center h-full">expand_more</mat-icon>
-        </button>
+        <div class="flex items-center gap-3">
+          <select [(ngModel)]="ordenActual" (ngModelChange)="aplicarFiltros()"
+            class="border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition bg-white cursor-pointer shadow-sm">
+            <option value="fecha_desc">Más reciente</option>
+            <option value="fecha_asc">Más antiguo</option>
+            <option value="nombre">Nombre A-Z</option>
+          </select>
+
+          <button
+              (click)="toggleFiltros()"
+              class="flex items-center gap-2 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium transition shadow-sm"
+              [class.bg-blue-600]="mostrarFiltros"
+              [class.text-white]="mostrarFiltros"
+              [class.bg-white]="!mostrarFiltros"
+              [class.text-gray-600]="!mostrarFiltros"
+          >
+              <mat-icon class="text-sm overflow-visible flex items-center h-full">tune</mat-icon>
+              Filtros avanzados
+              @if (hayFiltrosActivos) {
+                <span class="w-2 h-2 rounded-full inline-block" [class.bg-white]="mostrarFiltros" [class.bg-blue-500]="!mostrarFiltros"></span>
+              }
+          </button>
+
+          @if (hayFiltrosActivos) {
+            <button (click)="limpiarFiltros()" class="flex items-center gap-1 text-sm text-red-500 hover:text-red-700 transition">
+              <mat-icon class="text-base">close</mat-icon> Limpiar filtros
+            </button>
+          }
+        </div>
     </div>
 
-    
+    @if (mostrarFiltros) {
+      <div class="bg-white rounded-xl border border-blue-100 shadow-md p-5 flex flex-wrap gap-5 items-end">
+        <div class="flex items-center gap-2 text-blue-600 font-semibold text-sm mb-1 w-full">
+          <mat-icon class="text-base">tune</mat-icon> Filtros avanzados
+          <span class="ml-auto text-xs text-gray-400 font-normal">{{ reportes.length }} resultado(s)</span>
+        </div>
+
+        <div class="flex flex-col min-w-[180px]">
+          <label class="text-xs font-semibold text-gray-500 mb-1">Fecha creación desde</label>
+          <input type="date" [(ngModel)]="filtroFechaDesde" (ngModelChange)="aplicarFiltros()"
+            class="border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition" />
+        </div>
+
+        <div class="flex flex-col min-w-[180px]">
+          <label class="text-xs font-semibold text-gray-500 mb-1">Fecha creación hasta</label>
+          <input type="date" [(ngModel)]="filtroFechaHasta" (ngModelChange)="aplicarFiltros()"
+            class="border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition" />
+        </div>
+
+        <div class="flex flex-col min-w-[200px]">
+          <label class="text-xs font-semibold text-gray-500 mb-1">Creado por</label>
+          <input type="text" [(ngModel)]="filtroCreadoPor" (ngModelChange)="aplicarFiltros()" placeholder="Ej: Admin"
+            class="border border-gray-200 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition" />
+        </div>
+
+        @if (hayFiltrosActivos) {
+          <button (click)="limpiarFiltros()"
+            class="flex items-center gap-1 px-4 py-2 rounded-md border border-red-200 text-red-500 hover:bg-red-50 text-sm transition">
+            <mat-icon class="text-base">restart_alt</mat-icon> Restablecer
+          </button>
+        }
+      </div>
+    }
+
     <div class="flex-1 overflow-auto">
-        <!-- Vista en modo lista -->
         @if (vistaActual === 'list') {
             <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <table class="w-full text-left border-collapse">
@@ -189,13 +391,17 @@
                             <th class="py-3 px-4 text-sm font-semibold text-gray-900 w-1/6">Periodo</th>
                             <th class="py-3 px-4 text-sm font-semibold text-gray-900 w-1/6">Actualizado</th>
                             <th class="py-3 px-4 text-sm font-semibold text-gray-900 w-1/4">Descripción</th>
+                            <th class="py-3 px-4 text-sm font-semibold text-gray-900 text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @for (reporte of reportes; track reporte.id) {
-                            <tr class="hover:bg-gray-50 transition cursor-pointer">
+                            <tr class="hover:bg-blue-50 transition cursor-pointer" (click)="verReporte(reporte.id)">
                                 <td class="py-3 px-4 text-sm text-gray-600 font-medium">
+                                  <div class="flex items-center gap-2">
+                                    <mat-icon class="text-blue-400 text-base w-4 h-4">assessment</mat-icon>
                                     {{ reporte.nombre }}
+                                  </div>
                                 </td>
                                 <td class="py-3 px-4 text-sm text-gray-500">
                                     {{ reporte.creadoPor }}
@@ -209,46 +415,157 @@
                                 <td class="py-3 px-4 text-sm text-gray-400 truncate max-w-xs">
                                     {{ reporte.descripcion }}
                                 </td>
+                                <td class="py-3 px-4 text-center">
+                                  <div class="flex items-center justify-center gap-2">
+                                    <button
+                                      class="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2.5 py-1.5 rounded-md transition-colors border border-blue-200"
+                                      (click)="verReporte(reporte.id); $event.stopPropagation()"
+                                      title="Abrir en dashboard"
+                                      [disabled]="cargandoReporte === reporte.id"
+                                    >
+                                      @if (cargandoReporte === reporte.id) {
+                                        <span class="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                        Cargando...
+                                      } @else {
+                                        <mat-icon class="text-sm w-3.5 h-3.5">dashboard</mat-icon>
+                                        Ver dashboard
+                                      }
+                                    </button>
+                                    @if (!esPublico) {
+                                    <button
+                                      class="p-1.5 rounded-md transition-colors border border-transparent flex items-center justify-center"
+                                      [class.text-blue-600]="reporte.publicado"
+                                      [class.text-gray-400]="!reporte.publicado"
+                                      [class.hover:text-blue-800]="reporte.publicado"
+                                      [class.hover:text-gray-600]="!reporte.publicado"
+                                      [class.hover:bg-blue-50]="reporte.publicado"
+                                      [class.hover:bg-gray-100]="!reporte.publicado"
+                                      [class.hover:border-blue-200]="reporte.publicado"
+                                      [class.hover:border-gray-300]="!reporte.publicado"
+                                      (click)="togglePublicar(reporte.id, $event)"
+                                      [title]="reporte.publicado ? 'Despublicar' : 'Publicar'"
+                                    >
+                                      @if (cargandoPublicacion === reporte.id) {
+                                        <span class="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                      } @else {
+                                        <mat-icon class="text-base w-4 h-4">{{ reporte.publicado ? 'public' : 'public_off' }}</mat-icon>
+                                      }
+                                    </button>
+                                    <button
+                                      class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-md transition-colors border border-transparent hover:border-red-200"
+                                      (click)="eliminarReporte(reporte.id, $event)"
+                                      title="Eliminar reporte"
+                                    >
+                                        <mat-icon class="text-base w-4 h-4">delete</mat-icon>
+                                    </button>
+                                    }
+                                  </div>
+                                </td>
                             </tr>
+                        }
+                        @if (reportes.length === 0) {
+                          <tr>
+                            <td colspan="7" class="py-12 text-center">
+                              <div class="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-3 text-gray-500">
+                                <mat-icon style="font-size:24px;width:24px;height:24px">
+                                  inbox
+                                </mat-icon>
+                                <span>No se encontraron reportes con los filtros aplicados</span>
+                              </div>
+                            </td>
+                          </tr>
                         }
                     </tbody>
                 </table>
             </div>
         }
 
-        <!-- Vista en modo Grid -->
         @if (vistaActual === 'grid') {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 @for (reporte of reportes; track reporte.id) {
-                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-56 hover:shadow-md transition cursor-pointer">
-                        
-                        <!-- Header -->
+                    <div
+                      class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-56 hover:shadow-md hover:border-blue-200 transition cursor-pointer group"
+                      (click)="verReporte(reporte.id)"
+                    >
+
                         <div>
-                            <h3 class="text-lg font-bold text-gray-900 leading-tight mb-1">
-                                {{ reporte.nombre }}
-                            </h3>
-                            <p class="text-sm text-gray-500 mb-3">
+                            <div class="flex items-start gap-2 mb-1">
+                              <mat-icon class="text-blue-400 text-lg w-5 h-5 mt-0.5 shrink-0">assessment</mat-icon>
+                              <h3 class="text-lg font-bold text-gray-900 leading-tight">
+                                  {{ reporte.nombre }}
+                              </h3>
+                            </div>
+                            <p class="text-sm text-blue-500 mb-2 font-medium">
                                 {{ reporte.periodo }}
                             </p>
-                            <p class="text-xs text-gray-400 line-clamp-3">
+                            <p class="text-xs text-gray-400 line-clamp-2">
                                 {{ reporte.descripcion || 'Sin descripción disponible.' }}
                             </p>
                         </div>
 
-                        <!-- Footer -->
-                        <div class="flex items-end justify-between mt-4">
-                            <span class="text-xs font-semibold text-gray-700">
-                                {{ reporte.creadoPor }}
-                            </span>
-                            <span class="text-xs text-gray-500">
-                                {{ reporte.actualizado }}
-                            </span>
+                        <div class="flex items-end justify-between mt-4 border-t border-gray-50 pt-3">
+                            <div>
+                                <span class="text-xs font-semibold text-gray-700 block mb-0.5">
+                                    {{ reporte.creadoPor }}
+                                </span>
+                                <span class="text-xs text-gray-500">
+                                    {{ reporte.actualizado }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                              <button
+                                class="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 px-2 py-1.5 rounded-md transition-colors border border-blue-100 opacity-0 group-hover:opacity-100"
+                                (click)="verReporte(reporte.id); $event.stopPropagation()"
+                                title="Ver en dashboard"
+                                [disabled]="cargandoReporte === reporte.id"
+                              >
+                                @if (cargandoReporte === reporte.id) {
+                                  <span class="w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                } @else {
+                                  <mat-icon class="text-sm w-3.5 h-3.5">dashboard</mat-icon>
+                                }
+                              </button>
+                              @if (!esPublico) {
+                              <button
+                                class="p-1.5 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                [class.text-blue-600]="reporte.publicado"
+                                [class.text-gray-400]="!reporte.publicado"
+                                [class.hover:text-blue-800]="reporte.publicado"
+                                [class.hover:text-gray-600]="!reporte.publicado"
+                                [class.hover:bg-blue-50]="reporte.publicado"
+                                [class.hover:bg-gray-100]="!reporte.publicado"
+                                (click)="togglePublicar(reporte.id, $event)"
+                                [title]="reporte.publicado ? 'Despublicar' : 'Publicar'"
+                              >
+                                @if (cargandoPublicacion === reporte.id) {
+                                  <span class="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin block"></span>
+                                } @else {
+                                  <mat-icon class="text-base w-4 h-4">{{ reporte.publicado ? 'public' : 'public_off' }}</mat-icon>
+                                }
+                              </button>
+                              <button
+                                class="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                (click)="eliminarReporte(reporte.id, $event)"
+                                title="Eliminar reporte"
+                              >
+                                  <mat-icon class="text-base w-4 h-4">delete</mat-icon>
+                              </button>
+                              }
+                            </div>
                         </div>
                     </div>
+                }
+                @if (reportes.length === 0) {
+                  <div class="col-span-4 bg-white rounded-2xl p-14 text-center text-gray-400">
+                    <mat-icon class="text-gray-200 text-5xl block mx-auto mb-3" style="font-size:48px;width:48px;height:48px">inbox</mat-icon>
+                    <p class="text-sm">No se encontraron reportes con los filtros aplicados</p>
+                  </div>
                 }
             </div>
         }
     </div>
     }
 
-</div>
+</div> <!-- reportes-exportable -->
+
+</div> <!-- main container -->

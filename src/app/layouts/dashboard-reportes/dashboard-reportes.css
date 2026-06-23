@@ -2,5 +2,46 @@
   display: block;
 }
 
+@media print {
+  /* Ocultar botones, topbars y navegaciones que no deben salir en PDF */
+  header, nav, button {
+    display: none !important;
+  }
 
+  /* Asegurar que todos los contenedores sean expansibles */
+  .h-screen, main, .overflow-y-auto, .overflow-hidden, .flex-1 {
+    height: auto !important;
+    overflow: visible !important;
+    max-height: none !important;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+    background: white !important;
+  }
 
+  /* Forzar que los grids y layouts no se quiebren tan fácilmente */
+  .max-w-\[1600px\] {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Mostrar el header exclusivo para PDF */
+  .print-header {
+    display: flex !important;
+  }
+
+  /* Que los contenedores de gráficos no tengan box-shadow inútil en print */
+  .shadow-sm, .shadow-md {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* Evitar quiebres de página incómodos dentro de los contenedores */
+  .bg-white {
+    page-break-inside: avoid;
+  }
+}
+
+.print-header {
+  display: none;
+}

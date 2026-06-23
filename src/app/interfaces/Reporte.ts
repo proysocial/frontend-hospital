@@ -1,4 +1,3 @@
-// Para vista general reporte
 export interface Reporte {
   id: number;
   nombre: string;
@@ -6,4 +5,8 @@ export interface Reporte {
   periodo: string;
   actualizado: string;
   descripcion: string;
+  publicado?: boolean;
+  fecha_inicio_datos?: string;
+  fecha_fin_datos?: string;
+  fecha_creacion?: string;
 }

@@ -11,6 +11,8 @@ import { NgxEchartsModule } from 'ngx-echarts';
 import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Reporte } from '../../services/reporte/reporte';
 import { Device } from '../../services/device';
 
@@ -35,10 +37,21 @@ export class DashboardReportes implements OnInit {
   loading = true;
   rawData: any = null;
 
+  // ── modo reporte guardado ────────────────────────────────────────
+  modoReporteGuardado = false;
+  reporteGuardadoNombre = '';
+  reporteGuardadoFechaCreacion = '';
+  reporteGuardadoAutor = '';
+  reporteGuardadoPeriodo = '';
+  esPublico = false;
+
   // ── filtros ─────────────────────────────────────────────────────
   areaActiva: string | null = null;
   fechaInicio = '';
   fechaFin = '';
+  minDate = '';
+  maxDate = '';
+  fechaGeneracion = new Date();
   areas: { arealab: string; total: number }[] = [];
   filtroActivo = false;
 
@@ -111,9 +124,71 @@ export class DashboardReportes implements OnInit {
     '#06B6D4','#F97316','#84CC16','#EC4899','#14B8A6',
   ];
 
-  ngOnInit() { this.cargar(); }
+  ngOnInit() {
+    this.esPublico = sessionStorage.getItem('reporte_publico') === 'true';
+    sessionStorage.removeItem('reporte_publico');
 
-  volver() { this.router.navigate(['principal/reportes/nuevo']); }
+    // Verificar si viene de un reporte guardado
+    const guardado = sessionStorage.getItem('reporte_cargado');
+    if (guardado) {
+      try {
+        const r = JSON.parse(guardado);
+        sessionStorage.removeItem('reporte_cargado');
+        this.modoReporteGuardado = true;
+        this.reporteGuardadoNombre = r.nombre || r.nombre_reporte || 'Reporte guardado';
+        this.reporteGuardadoFechaCreacion = r.fecha_creacion
+          ? new Date(r.fecha_creacion).toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric' })
+          : '';
+        this.reporteGuardadoAutor = r.autor?.nombre
+          ? `${r.autor.nombre} ${r.autor.apellido || ''}`.trim()
+          : 'Admin';
+        this.reporteGuardadoPeriodo = r.fecha_actualizacion
+          ? new Date(r.fecha_actualizacion).toLocaleDateString('es-PE', { month: 'long' })
+          : '';
+        // Restaurar filtros del reporte guardado
+        const filtros = r.filtros_aplicados ?? {};
+        this.areaActiva = filtros.area ?? null;
+        this.fechaInicio = filtros.fecha_inicio ?? '';
+        this.fechaFin = filtros.fecha_fin ?? '';
+        this.filtroActivo = !!(this.fechaInicio || this.fechaFin || this.areaActiva);
+        // Procesar los datos del reporte guardado directamente (sin llamar a la API)
+        const data = r.datos;
+        if (data) {
+          this.rawData = data;
+          if (data.areas?.length > 0) this.areas = data.areas;
+          this.procesarKPIs(data);
+          if (!this.areaActiva) {
+            this.buildGlobales(data);
+          } else {
+            this.buildArea(data);
+          }
+          this.loading = false;
+          this.cdr.markForCheck();
+          return;
+        }
+      } catch (e) {
+        sessionStorage.removeItem('reporte_cargado');
+      }
+    }
+    this.cargar();
+  }
+
+  volver() {
+    if (this.modoReporteGuardado) {
+      this.router.navigate(['principal/reportes']);
+    } else {
+      this.router.navigate(['principal/reportes/nuevo']);
+    }
+  }
+
+  salirModoGuardado() {
+    this.modoReporteGuardado = false;
+    this.areaActiva = null;
+    this.fechaInicio = '';
+    this.fechaFin = '';
+    this.filtroActivo = false;
+    this.cargar();
+  }
 
   // ── Navegación ─────────────────────────────────────────────────
   seleccionarArea(area: string | null) {
@@ -167,6 +242,14 @@ export class DashboardReportes implements OnInit {
     this.totalConResultado = k.total_con_resultado ?? 0;
     this.tasaResultado = k.tasa_resultado ?? 0;
     this.examenTop = k.examen_top ?? '-';
+    
+    if (data.examenes_mas_solicitados && data.examenes_mas_solicitados.length > 0) {
+      this.minDate = data.examenes_mas_solicitados[0].primera_fecha || '';
+      this.maxDate = data.examenes_mas_solicitados[0].ultima_fecha || '';
+    } else {
+      this.minDate = '';
+      this.maxDate = '';
+    }
     
     const doctores = data.doctores_top ?? [];
     if (doctores.length > 0) {
@@ -283,6 +366,264 @@ export class DashboardReportes implements OnInit {
   cerrarDrillDown() {
     this.drillDownContext = null;
     this.cdr.markForCheck();
+  }
+
+  async exportarPdf() {
+    const areasDisponibles = [
+      { label: 'GLOBAL', key: null },
+      ...this.areas.map((a) => ({ label: a.arealab, key: a.arealab })),
+    ];
+
+    const checks = areasDisponibles
+      .map(
+        (a, i) =>
+          `<label class="flex items-center gap-2 mb-1.5 cursor-pointer select-none">
+            <input type="checkbox" id="area-${i}" checked class="w-4 h-4 accent-blue-600">
+            <span class="text-sm font-medium text-slate-700">${a.label}</span>
+          </label>`
+      )
+      .join('');
+
+    const { value: seleccion } = await Swal.fire({
+      title: 'Exportar PDF',
+      html: `<div class="text-left max-h-60 overflow-y-auto">${checks}</div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Generar PDF',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        return areasDisponibles
+          .filter((_, i) => (document.getElementById(`area-${i}`) as HTMLInputElement)?.checked)
+          .map((a) => a.key);
+      },
+    });
+
+    if (!seleccion || seleccion.length === 0) return;
+
+    Swal.fire({
+      title: 'Generando PDF...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+      const data = this.rawData;
+      if (!data) throw new Error('No hay datos');
+
+      const doc = new jsPDF('l', 'mm', 'a4');
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 14;
+      const chartW = (pageW - margin * 2 - 10) / 2;
+      const chartH = 85;
+      const origArea = this.areaActiva;
+
+      for (const areaKey of seleccion) {
+        this.areaActiva = areaKey;
+        this.procesarKPIs(data);
+
+        if (areaKey === null) {
+          this.buildGlobales(data);
+        } else {
+          const a = data.resumen_por_area?.[areaKey];
+          if (!a) continue;
+          this.buildArea(data);
+        }
+        this.cdr.detectChanges();
+
+        const chartProps = this.getChartPropsForArea(areaKey);
+        const images: { name: string; url: string }[] = [];
+
+        for (const prop of chartProps) {
+          const opts = (this as any)[prop];
+          if (!opts) continue;
+          const url = await this.renderOptionsToImage(opts, Math.round(chartW * 3.78), Math.round(chartH * 3.78));
+          images.push({ name: prop, url });
+        }
+
+        if (images.length === 0 && areaKey !== null) continue;
+        if (images.length === 0) continue;
+
+        const titulo = areaKey === null ? 'GLOBAL' : areaKey;
+
+        this.addSectionPage(doc, titulo, margin, chartW, chartH, pageW, pageH);
+
+        for (let i = 0; i < images.length; i += 2) {
+          if (i > 0 || doc.getNumberOfPages() > 1) {
+            doc.addPage();
+          }
+          const y = margin;
+          doc.addImage(images[i].url, 'PNG', margin, y, chartW, chartH);
+          if (i + 1 < images.length) {
+            doc.addImage(images[i + 1].url, 'PNG', margin + chartW + 10, y, chartW, chartH);
+          }
+        }
+      }
+
+      this.areaActiva = origArea;
+      if (origArea) {
+        this.procesarKPIs(data);
+        this.buildArea(data);
+      } else {
+        this.procesarKPIs(data);
+        this.buildGlobales(data);
+      }
+      this.cdr.detectChanges();
+
+      doc.save(`reporte_${new Date().toISOString().slice(0, 10)}.pdf`);
+      Swal.close();
+    } catch (e) {
+      Swal.close();
+      Swal.fire('Error', 'Ocurrió un error al generar el PDF', 'error');
+    }
+  }
+
+  private getChartPropsForArea(areaKey: string | null): string[] {
+    if (areaKey === null) {
+      return [
+        'trazabilidadChart', 'sexoChart', 'seguroChart',
+        'examenesChart', 'doctoresChart', 'cie10Chart',
+        'serviciosChart', 'tendenciaChart', 'horasChart',
+        'edadChart', 'sedeChart', 'diaSemanaChart',
+        'pacientesChart', 'paretoCie10Chart', 'curvaHorasChart',
+        'segurosRoseChart', 'sedesTreemapChart',
+      ];
+    }
+    return [
+      'areaGaugeChart', 'areaResultadoDonutChart', 'areaSexoChart',
+      'areaTendenciaChart', 'areaTopExamenesChart', 'areaServiciosChart',
+      'areaCIE10Chart', 'areaDoctorChart', 'areaExamenResultadoChart',
+      'areaDiaSemanaChart', 'areaPacientesChart', 'areaRadarSemanalChart',
+    ];
+  }
+
+  private async renderOptionsToImage(options: any, width: number, height: number): Promise<string> {
+    const div = document.createElement('div');
+    div.style.cssText = `width:${width}px;height:${height}px;position:absolute;left:-9999px;top:0;`;
+    document.body.appendChild(div);
+    const ec = await import('echarts');
+    const instance = ec.init(div);
+    instance.setOption(options);
+    await new Promise((r) => setTimeout(r, 600));
+    const url = instance.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#fff' });
+    instance.dispose();
+    document.body.removeChild(div);
+    return url;
+  }
+
+  private addSectionPage(doc: jsPDF, titulo: string, margin: number, cw: number, ch: number, pw: number, ph: number) {
+    if (doc.getNumberOfPages() > 0) {
+      doc.addPage();
+    }
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(titulo, margin, 30);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const now = new Date();
+    doc.text(
+      `Generado el ${now.toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+      margin, 40
+    );
+
+    if (titulo === 'GLOBAL') {
+      autoTable(doc, {
+        startY: 48,
+        head: [['Métrica', 'Valor']],
+        body: [
+          ['Total solicitados', this.fmt(this.totalSolicitados)],
+          ['Con resultado', this.fmt(this.totalConResultado)],
+          ['Tasa de resultado', `${this.tasaResultado}%`],
+          ['Femenino', this.fmt(this.totalFemenino)],
+          ['Masculino', this.fmt(this.totalMasculino)],
+        ],
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
+        tableWidth: 100,
+      });
+    } else {
+      autoTable(doc, {
+        startY: 48,
+        head: [['Métrica', 'Valor']],
+        body: [
+          ['Solicitados', this.fmt(this.areaSolicitados)],
+          ['Con resultado', this.fmt(this.areaConResultado)],
+          ['Tasa de cobertura', `${this.areaTasa}%`],
+          ['Examen top', this.areaExamenTop],
+        ],
+        styles: { fontSize: 9, cellPadding: 2 },
+        headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
+        tableWidth: 100,
+      });
+    }
+
+    doc.setFontSize(8);
+    doc.text(
+      `Hospital Nacional Ramiro Prialé Prialé - ${titulo}`,
+      margin,
+      ph - 10
+    );
+  }
+
+  async guardarReporte() {
+    const minD = this.minDate || 'N/A';
+    const maxD = this.maxDate || 'N/A';
+    const suggestedName = `Reporte ${minD} al ${maxD}`;
+    
+    const { value: formValues } = await Swal.fire({
+      title: 'Guardar Reporte',
+      html: `
+        <div class="flex flex-col gap-3 text-left">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Nombre del reporte</label>
+            <input id="swal-nombre" class="swal2-input !m-0 !w-full" value="${suggestedName}">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
+            <textarea id="swal-desc" class="swal2-textarea !m-0 !w-full" placeholder="Añade observaciones adicionales..."></textarea>
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        return {
+          nombre: (document.getElementById('swal-nombre') as HTMLInputElement).value,
+          descripcion: (document.getElementById('swal-desc') as HTMLTextAreaElement).value
+        }
+      }
+    });
+
+    if (formValues) {
+      if (!formValues.nombre) {
+        Swal.fire('Error', 'El nombre es obligatorio', 'error');
+        return;
+      }
+      
+      const payload = {
+        nombre: formValues.nombre,
+        descripcion: formValues.descripcion,
+        fecha_inicio_datos: this.minDate || null,
+        fecha_fin_datos: this.maxDate || null,
+        filtros_aplicados: {
+          area: this.areaActiva,
+          fecha_inicio: this.fechaInicio,
+          fecha_fin: this.fechaFin
+        },
+        datos: this.rawData
+      };
+      
+      this.svc.guardarReporte(payload).subscribe({
+        next: () => {
+          Swal.fire('Guardado', 'Reporte guardado exitosamente', 'success');
+        },
+        error: () => {
+          Swal.fire('Error', 'No se pudo guardar el reporte', 'error');
+        }
+      });
+    }
   }
 
   // ── Construcción de gráficos globales ───────────────────────────────────
