@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import html2canvas from 'html2canvas';
 import { Reporte } from '../../services/reporte/reporte';
 import { Device } from '../../services/device';
 
@@ -29,6 +29,13 @@ export class DashboardReportes implements OnInit {
   private svc = inject(Reporte);
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
+
+  pdfArea: string | null = null;
+
+  cambiarPdfArea(area: string | null) {
+    this.pdfArea = area;
+    this.seleccionarArea(area);
+  }
 
   isHandset$ = this.device.isHandset$;
   isDesktop$ = this.device.isDesktop$;
@@ -193,6 +200,7 @@ export class DashboardReportes implements OnInit {
   // ── Navegación ─────────────────────────────────────────────────
   seleccionarArea(area: string | null) {
     this.areaActiva = area;
+    this.pdfArea = area;
     this.cargar();
   }
 
@@ -235,12 +243,55 @@ export class DashboardReportes implements OnInit {
     this.cargar();
   }
 
+  async exportarPDF() {
+    Swal.fire({ title: 'Generando PDF…', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+    try {
+      const element = document.querySelector('.dashboard-pdf-content, .dashboard-pdf-content-mobile') as HTMLElement;
+      if (!element) { Swal.close(); Swal.fire('Error', 'No se pudo generar el PDF', 'error'); return; }
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        onclone: (doc) => {
+          const h = doc.querySelector('.print-header') as HTMLElement;
+          if (h) h.style.display = 'flex';
+        },
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      let heightLeft = pdfHeight;
+      let position = 0;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+      while (heightLeft > 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const label = (this.areaActiva ?? 'global').replace(/\s+/g, '_').toLowerCase();
+      pdf.save(`reporte_${label}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      Swal.close();
+    } catch (e) {
+      console.error('Error generando PDF:', e);
+      Swal.close();
+      Swal.fire('Error', 'Ocurrió un error al generar el PDF', 'error');
+    }
+  }
+
   // ── KPIs ─────────────────────────────────────────────────────────
   procesarKPIs(data: any) {
     const k = data.kpis ?? {};
     this.totalSolicitados = k.total_solicitados ?? 0;
     this.totalConResultado = k.total_con_resultado ?? 0;
-    this.tasaResultado = k.tasa_resultado ?? 0;
+    this.tasaResultado = Math.min(k.tasa_resultado ?? 0, 100);
     this.examenTop = k.examen_top ?? '-';
     
     if (data.examenes_mas_solicitados && data.examenes_mas_solicitados.length > 0) {
@@ -272,7 +323,7 @@ export class DashboardReportes implements OnInit {
       this.areaSolicitados = a.total_solicitados ?? 0;
       this.areaConResultado = a.total_con_resultado ?? 0;
       this.areaTasa = this.areaSolicitados > 0
-        ? Math.round((this.areaConResultado / this.areaSolicitados) * 100) : 0;
+        ? Math.min(Math.round((this.areaConResultado / this.areaSolicitados) * 100), 100) : 0;
       this.areaExamenTop = a.top_examenes?.[0]?.desc_examen ?? '-';
       
       const doctoresArea = a.doctores_top ?? [];
@@ -366,203 +417,6 @@ export class DashboardReportes implements OnInit {
   cerrarDrillDown() {
     this.drillDownContext = null;
     this.cdr.markForCheck();
-  }
-
-  async exportarPdf() {
-    const areasDisponibles = [
-      { label: 'GLOBAL', key: null },
-      ...this.areas.map((a) => ({ label: a.arealab, key: a.arealab })),
-    ];
-
-    const checks = areasDisponibles
-      .map(
-        (a, i) =>
-          `<label class="flex items-center gap-2 mb-1.5 cursor-pointer select-none">
-            <input type="checkbox" id="area-${i}" checked class="w-4 h-4 accent-blue-600">
-            <span class="text-sm font-medium text-slate-700">${a.label}</span>
-          </label>`
-      )
-      .join('');
-
-    const { value: seleccion } = await Swal.fire({
-      title: 'Exportar PDF',
-      html: `<div class="text-left max-h-60 overflow-y-auto">${checks}</div>`,
-      showCancelButton: true,
-      confirmButtonText: 'Generar PDF',
-      cancelButtonText: 'Cancelar',
-      preConfirm: () => {
-        return areasDisponibles
-          .filter((_, i) => (document.getElementById(`area-${i}`) as HTMLInputElement)?.checked)
-          .map((a) => a.key);
-      },
-    });
-
-    if (!seleccion || seleccion.length === 0) return;
-
-    Swal.fire({
-      title: 'Generando PDF...',
-      allowOutsideClick: false,
-      didOpen: () => Swal.showLoading(),
-    });
-
-    try {
-      const data = this.rawData;
-      if (!data) throw new Error('No hay datos');
-
-      const doc = new jsPDF('l', 'mm', 'a4');
-      const pageW = doc.internal.pageSize.getWidth();
-      const pageH = doc.internal.pageSize.getHeight();
-      const margin = 14;
-      const chartW = (pageW - margin * 2 - 10) / 2;
-      const chartH = 85;
-      const origArea = this.areaActiva;
-
-      for (const areaKey of seleccion) {
-        this.areaActiva = areaKey;
-        this.procesarKPIs(data);
-
-        if (areaKey === null) {
-          this.buildGlobales(data);
-        } else {
-          const a = data.resumen_por_area?.[areaKey];
-          if (!a) continue;
-          this.buildArea(data);
-        }
-        this.cdr.detectChanges();
-
-        const chartProps = this.getChartPropsForArea(areaKey);
-        const images: { name: string; url: string }[] = [];
-
-        for (const prop of chartProps) {
-          const opts = (this as any)[prop];
-          if (!opts) continue;
-          const url = await this.renderOptionsToImage(opts, Math.round(chartW * 3.78), Math.round(chartH * 3.78));
-          images.push({ name: prop, url });
-        }
-
-        if (images.length === 0 && areaKey !== null) continue;
-        if (images.length === 0) continue;
-
-        const titulo = areaKey === null ? 'GLOBAL' : areaKey;
-
-        this.addSectionPage(doc, titulo, margin, chartW, chartH, pageW, pageH);
-
-        for (let i = 0; i < images.length; i += 2) {
-          if (i > 0 || doc.getNumberOfPages() > 1) {
-            doc.addPage();
-          }
-          const y = margin;
-          doc.addImage(images[i].url, 'PNG', margin, y, chartW, chartH);
-          if (i + 1 < images.length) {
-            doc.addImage(images[i + 1].url, 'PNG', margin + chartW + 10, y, chartW, chartH);
-          }
-        }
-      }
-
-      this.areaActiva = origArea;
-      if (origArea) {
-        this.procesarKPIs(data);
-        this.buildArea(data);
-      } else {
-        this.procesarKPIs(data);
-        this.buildGlobales(data);
-      }
-      this.cdr.detectChanges();
-
-      doc.save(`reporte_${new Date().toISOString().slice(0, 10)}.pdf`);
-      Swal.close();
-    } catch (e) {
-      Swal.close();
-      Swal.fire('Error', 'Ocurrió un error al generar el PDF', 'error');
-    }
-  }
-
-  private getChartPropsForArea(areaKey: string | null): string[] {
-    if (areaKey === null) {
-      return [
-        'trazabilidadChart', 'sexoChart', 'seguroChart',
-        'examenesChart', 'doctoresChart', 'cie10Chart',
-        'serviciosChart', 'tendenciaChart', 'horasChart',
-        'edadChart', 'sedeChart', 'diaSemanaChart',
-        'pacientesChart', 'paretoCie10Chart', 'curvaHorasChart',
-        'segurosRoseChart', 'sedesTreemapChart',
-      ];
-    }
-    return [
-      'areaGaugeChart', 'areaResultadoDonutChart', 'areaSexoChart',
-      'areaTendenciaChart', 'areaTopExamenesChart', 'areaServiciosChart',
-      'areaCIE10Chart', 'areaDoctorChart', 'areaExamenResultadoChart',
-      'areaDiaSemanaChart', 'areaPacientesChart', 'areaRadarSemanalChart',
-    ];
-  }
-
-  private async renderOptionsToImage(options: any, width: number, height: number): Promise<string> {
-    const div = document.createElement('div');
-    div.style.cssText = `width:${width}px;height:${height}px;position:absolute;left:-9999px;top:0;`;
-    document.body.appendChild(div);
-    const ec = await import('echarts');
-    const instance = ec.init(div);
-    instance.setOption(options);
-    await new Promise((r) => setTimeout(r, 600));
-    const url = instance.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#fff' });
-    instance.dispose();
-    document.body.removeChild(div);
-    return url;
-  }
-
-  private addSectionPage(doc: jsPDF, titulo: string, margin: number, cw: number, ch: number, pw: number, ph: number) {
-    if (doc.getNumberOfPages() > 0) {
-      doc.addPage();
-    }
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text(titulo, margin, 30);
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const now = new Date();
-    doc.text(
-      `Generado el ${now.toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
-      margin, 40
-    );
-
-    if (titulo === 'GLOBAL') {
-      autoTable(doc, {
-        startY: 48,
-        head: [['Métrica', 'Valor']],
-        body: [
-          ['Total solicitados', this.fmt(this.totalSolicitados)],
-          ['Con resultado', this.fmt(this.totalConResultado)],
-          ['Tasa de resultado', `${this.tasaResultado}%`],
-          ['Femenino', this.fmt(this.totalFemenino)],
-          ['Masculino', this.fmt(this.totalMasculino)],
-        ],
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
-        tableWidth: 100,
-      });
-    } else {
-      autoTable(doc, {
-        startY: 48,
-        head: [['Métrica', 'Valor']],
-        body: [
-          ['Solicitados', this.fmt(this.areaSolicitados)],
-          ['Con resultado', this.fmt(this.areaConResultado)],
-          ['Tasa de cobertura', `${this.areaTasa}%`],
-          ['Examen top', this.areaExamenTop],
-        ],
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
-        tableWidth: 100,
-      });
-    }
-
-    doc.setFontSize(8);
-    doc.text(
-      `Hospital Nacional Ramiro Prialé Prialé - ${titulo}`,
-      margin,
-      ph - 10
-    );
   }
 
   async guardarReporte() {
@@ -919,7 +773,7 @@ export class DashboardReportes implements OnInit {
         xAxis: { type: 'value' },
         yAxis: {
           type: 'category',
-          data: datosSeguros.map((d: any, i: number) => d.estado || d.rango || d.area || d.servicio || d.item || `Item ${i+1}`).reverse(),
+          data: datosSeguros.map((d: any) => d.examen || d.desc_examen || d.paciente || d.profesional || d.estado || d.rango || d.area || d.servicio || d.item || 'Sin nombre').reverse(),
           axisLabel: { fontSize: 11 }
         },
         series: [{
@@ -1427,7 +1281,7 @@ export class DashboardReportes implements OnInit {
           formatter: '{value}%',
           offsetCenter: ['0%', '-8%'],
         },
-        data: [{ value: tasa, name: `${conResultado} de ${total} con resultado` }],
+        data: [{ value: Math.min(tasa, 100), name: `${conResultado} de ${total} con resultado` }],
       }],
     };
   }

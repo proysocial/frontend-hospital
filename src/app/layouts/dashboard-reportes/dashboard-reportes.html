@@ -1,19 +1,5 @@
 <div class="h-screen w-full inset-0 flex flex-col bg-slate-100 font-sans text-slate-900 overflow-hidden" [class.area-mode]="areaActiva">
 
-<!-- HEADER PARA PDF -->
-<div class="print-header flex-col border-b-2 border-blue-600 pb-4 mb-6">
-  <div class="flex justify-between items-end">
-    <div>
-      <h1 class="text-2xl font-extrabold text-blue-600 tracking-tight leading-none mb-1">REPORTE CLÍNICO - MEDIREPORT</h1>
-      <p class="text-sm font-semibold text-slate-700">Hospital Nacional Ramiro Prialé Prialé - Área: {{ areaActiva || 'GLOBAL' }}</p>
-    </div>
-    <div class="text-right">
-      <p class="text-xs text-slate-500"><strong>Fecha de generación:</strong> {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</p>
-      <p class="text-xs text-slate-500"><strong>Período:</strong> {{ modoReporteGuardado ? reporteGuardadoPeriodo : ((minDate || 'Inicio') + ' al ' + (maxDate || 'Fin')) }}</p>
-      <p class="text-xs text-slate-500"><strong>Generado por:</strong> {{ modoReporteGuardado ? reporteGuardadoAutor : 'Sistema Admin' }}</p>
-    </div>
-  </div>
-</div>
 <!-- ══ MOBILE ═══════════════════════════════════════════════════ -->
 @if (isHandset$ | async) {
   <div class="flex flex-col h-full w-full bg-slate-100 overflow-y-auto">
@@ -50,9 +36,17 @@
           <mat-icon class="text-[18px] w-[18px] h-[18px]">save</mat-icon> Guardar
         </button>
         }
-        <button (click)="exportarPdf()" class="flex-1 bg-slate-800 text-white py-2.5 rounded text-sm font-semibold flex justify-center items-center gap-1">
-          <mat-icon class="text-[18px] w-[18px] h-[18px]">picture_as_pdf</mat-icon> Exportar
-        </button>
+        <div class="flex gap-1 flex-1">
+          <select [ngModel]="pdfArea" (ngModelChange)="cambiarPdfArea($event)" class="flex-1 bg-slate-100 border rounded px-1 py-2 text-xs min-w-0">
+            <option [ngValue]="null">Global</option>
+            @for (a of areas; track a.arealab) {
+              <option [ngValue]="a.arealab">{{ a.arealab }}</option>
+            }
+          </select>
+          <!-- <button (click)="exportarPDF()" class="bg-red-600 text-white px-3 py-2.5 rounded text-sm font-semibold flex items-center gap-1 shrink-0">
+            <mat-icon class="text-[18px] w-[18px] h-[18px]">picture_as_pdf</mat-icon>
+          </button> -->
+        </div>
       </div>
     </div>
 
@@ -76,7 +70,21 @@
     </div>
 
     <!-- CONTENIDO PRINCIPAL -->
-    <div class="p-3 flex flex-col gap-4 pb-8">
+    <div class="p-3 flex flex-col gap-4 pb-8 dashboard-pdf-content-mobile">
+      <!-- HEADER PARA PDF -->
+      <div class="print-header flex-col border-b-2 border-blue-600 pb-4 mb-6">
+        <div class="flex justify-between items-end">
+          <div>
+            <h1 class="text-2xl font-extrabold text-blue-600 tracking-tight leading-none mb-1">REPORTE CLÍNICO - MEDIREPORT</h1>
+            <p class="text-sm font-semibold text-slate-700">Hospital Nacional Ramiro Prialé Prialé - Área: {{ areaActiva || 'GLOBAL' }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-slate-500"><strong>Fecha de generación:</strong> {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p class="text-xs text-slate-500"><strong>Período:</strong> {{ modoReporteGuardado ? reporteGuardadoPeriodo : ((minDate || 'Inicio') + ' al ' + (maxDate || 'Fin')) }}</p>
+            <p class="text-xs text-slate-500"><strong>Generado por:</strong> {{ modoReporteGuardado ? reporteGuardadoAutor : 'Sistema Admin' }}</p>
+          </div>
+        </div>
+      </div>
 
       <!-- BANNER REPORTE GUARDADO (Mobile) -->
       @if (modoReporteGuardado) {
@@ -124,7 +132,7 @@
                     <div class="space-y-2 max-h-50 overflow-y-auto">
                       @for (item of drillDownContext.datos.slice(0, 10); track $index) {
                         <div class="flex justify-between items-center p-2 bg-slate-50 rounded">
-                          <span class="text-xs">{{ item.profesional || item.desc_examen || item.paciente || item.estado || item.rango || item.area || item.servicio || 'Item' }}</span>
+                          <span class="text-xs">{{ item.examen || item.desc_examen || item.profesional || item.paciente || item.estado || item.rango || item.area || item.servicio || 'Item' }}</span>
                           <span class="text-xs font-bold">{{ item.total }}</span>
                         </div>
                       }
@@ -462,9 +470,17 @@
       <mat-icon class="text-base w-4 h-4">save</mat-icon> Guardar
     </button>
     }
-    <button class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-md text-[13px] font-semibold flex items-center gap-1.5 transition-colors shadow-sm" (click)="exportarPdf()">
-      <mat-icon class="text-base w-4 h-4">picture_as_pdf</mat-icon> Exportar
-    </button>
+    <!-- <div class="flex items-center gap-1.5">
+      <select [ngModel]="pdfArea" (ngModelChange)="cambiarPdfArea($event)" class="bg-white border border-slate-200 rounded-md px-2 py-1.5 text-[13px] text-slate-700 focus:outline-none focus:border-blue-600 cursor-pointer max-w-[140px]">
+        <option [ngValue]="null">Global</option>
+        @for (a of areas; track a.arealab) {
+          <option [ngValue]="a.arealab">{{ a.arealab }}</option>
+        }
+      </select>
+      <button class="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-[13px] font-semibold transition-colors shadow-sm cursor-pointer" (click)="exportarPDF()">
+        <mat-icon class="text-base w-4 h-4">picture_as_pdf</mat-icon> PDF
+      </button>
+    </div> -->
     @if (areaActiva) {
       <span class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-[13px] font-semibold flex items-center gap-1.5 border border-blue-100 shadow-sm ml-2">
         <mat-icon class="text-base w-4 h-4">{{ iconArea(areaActiva) }}</mat-icon>
@@ -553,7 +569,7 @@
                 <tbody>
                   @for (item of drillDownContext.datos.slice(0, 15); track $index) {
                     <tr class="border-t hover:bg-slate-50">
-                      <td class="px-4 py-2 text-xs">{{ item.profesional || item.desc_examen || item.paciente || item.estado || item.rango || item.area || item.servicio || 'Item' }}</td>
+                      <td class="px-4 py-2 text-xs">{{ item.examen || item.desc_examen || item.profesional || item.paciente || item.estado || item.rango || item.area || item.servicio || 'Item' }}</td>
                       <td class="px-4 py-2 text-xs text-right font-bold">{{ item.total }}</td>
                     </tr>
                   }
@@ -568,7 +584,21 @@
 }
 
 <!-- ─ MAIN ───────────────────────────────────────────────────── -->
-<main class="flex-1 overflow-y-auto w-full relative z-10 [mask-image:linear-gradient(to_bottom,transparent_0,black_20px)]">
+<main class="flex-1 overflow-y-auto w-full relative z-10 dashboard-pdf-content">
+  <!-- HEADER PARA PDF -->
+  <div class="print-header flex-col border-b-2 border-blue-600 pb-4 mb-6 px-6 pt-8">
+    <div class="flex justify-between items-end">
+      <div>
+        <h1 class="text-2xl font-extrabold text-blue-600 tracking-tight leading-none mb-1">REPORTE CLÍNICO - MEDIREPORT</h1>
+        <p class="text-sm font-semibold text-slate-700">Hospital Nacional Ramiro Prialé Prialé - Área: {{ areaActiva || 'GLOBAL' }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-slate-500"><strong>Fecha de generación:</strong> {{ fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</p>
+        <p class="text-xs text-slate-500"><strong>Período:</strong> {{ modoReporteGuardado ? reporteGuardadoPeriodo : ((minDate || 'Inicio') + ' al ' + (maxDate || 'Fin')) }}</p>
+        <p class="text-xs text-slate-500"><strong>Generado por:</strong> {{ modoReporteGuardado ? reporteGuardadoAutor : 'Sistema Admin' }}</p>
+      </div>
+    </div>
+  </div>
   <div class="px-6 pt-8 pb-10 max-w-[1600px] mx-auto">
 
     @if (loading) {
