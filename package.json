@@ -9,7 +9,8 @@
     "test": "ng test",
     "serve:ssr:hospitalreport": "node dist/hospitalreport/server/server.mjs",
     "clean": "rm -rf .angular/cache node_modules/.vite",
-    "start:clean": "npm run clean && ng serve"
+    "start:clean": "npm run clean && ng serve",
+    "serve:network": "ng serve --host 0.0.0.0"
   },
   "prettier": {
     "printWidth": 100,

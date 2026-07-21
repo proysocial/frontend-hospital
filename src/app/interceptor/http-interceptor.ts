@@ -26,6 +26,11 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
         `;
       }
 
+      // Error 401 — el token-interceptor lo maneja (refresca token y reintenta)
+      else if (error.status === 401) {
+        return throwError(() => error);
+      }
+
       // Error 422
       else if (error.status === 422) {
         htmlMensaje = `
